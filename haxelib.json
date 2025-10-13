@@ -1,0 +1,19 @@
+{
+    "name": "hxluau",
+    "classPath": "src",
+    "version": "0.1.0",
+    "description": "Haxe bindings for the Luau scripting language",
+    "license": "MIT",
+    "releasenote": "Initial release",
+    "contributors": [
+        "47rooks"
+    ],
+    "tags": [
+        "luau",
+        "lua",
+        "scripting",
+        "bindings",
+        "cpp"
+    ],
+    "url": "https://github.com/47rooks/hxluau"
+}
