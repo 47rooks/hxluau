@@ -20,6 +20,19 @@ private abstract CString(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstC
 	}
 }
 
+private typedef CSizeT = cpp.SizeT;
+private typedef Ref<T> = cpp.Star<T>;
+
+private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
+	@:from static inline function fromPointer(p:cpp.ConstCharStar):Bytecode {
+		return p;
+	}
+
+	@:to inline function toPointer():cpp.ConstCharStar {
+		return this;
+	}
+}
+
 /**
  * Lua status codes.
  */
@@ -94,14 +107,15 @@ extern class Lua {
 	@:native("luaL_newstate")
 	static function newstate():State;
 
+	// FIXME the options type is complex and needs to be full externed
 	@:native("luau_compile")
-	static function luau_compile(source:cpp.ConstCharStar, size:cpp.SizeT, options:Null<Dynamic>, bytecodeSize:cpp.Star<cpp.SizeT>):cpp.ConstCharStar;
+	static function luau_compile(source:CString, size:CSizeT, options:Null<Dynamic>, bytecodeSize:Ref<CSizeT>):Bytecode;
 
 	@:native("luau_load")
-	static function luau_load(L:State, name:String, bytecode:cpp.ConstCharStar, bytecodeSize:cpp.SizeT, mode:Int):Int;
+	static function luau_load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
 
 	@:native("lua_tolstring")
-	static function tolstring(L:State, idx:Int, len:cpp.Star<cpp.SizeT>):CString;
+	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
 
 	static inline function tostring(L:State, idx:Int):CString {
 		return tolstring(L, idx, null);
@@ -134,7 +148,7 @@ extern class Lua {
 	 * @return The result of the operation.
 	 */
 	@:native('lua_getglobal')
-	static function getglobal(L:State, s:cpp.ConstCharStar):Int;
+	static function getglobal(L:State, s:CString):Int;
 
 	/**
 	 * Check if a value is a number.

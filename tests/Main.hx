@@ -6,7 +6,7 @@ import cpp.SizeT;
 class Main {
 	public static function main() {
 		var L = Lua.newstate();
-		var source = "a = 7 + 11 - 12";
+		var source = "a = 7 + 11 - 12 * 12";
 		var byteCodeSize:SizeT = 0;
 
 		var byteCode = Lua.luau_compile(source, source.length, null, cpp.Pointer.addressOf(byteCodeSize).ptr);
