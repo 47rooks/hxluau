@@ -20,7 +20,7 @@ private abstract CString(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstC
 	}
 }
 
-private typedef CSizeT = cpp.SizeT;
+typedef CSizeT = cpp.SizeT;
 private typedef Ref<T> = cpp.Star<T>;
 
 private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
@@ -32,6 +32,27 @@ private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.Const
 		return this;
 	}
 }
+
+/**
+ * An opaque struct to hold compiled bytecode and its size.
+ * Callers must not modify or free the contents.
+ */
+class Code {
+	public var code:cpp.ConstCharStar;
+
+	public var size:Int;
+
+	public function new() {}
+}
+
+@:include("luacode.h")
+@:buildXml("
+	<files id='haxe'>
+		<compilerflag value='-I${haxelib:hxluau}/luau/Compiler/include'/>
+	</files>")
+@:native("lua_CompileOptions")
+@:structInit()
+extern class CompileOptions {}
 
 /**
  * Lua status codes.
@@ -70,7 +91,6 @@ extern class Lua {
 	// option for multiple returns in 'lua_pcall' and 'lua_call'
 	@:native("LUA_MULTRET")
 	static var MULTRET:Int;
-
 	/**
 	 * Pseudo indices
 	 */
@@ -109,17 +129,29 @@ extern class Lua {
 
 	// FIXME the options type is complex and needs to be full externed
 	@:native("luau_compile")
-	static function luau_compile(source:CString, size:CSizeT, options:Null<Dynamic>, bytecodeSize:Ref<CSizeT>):Bytecode;
+	static function _compile(source:CString, size:CSizeT, options:cpp.Pointer<CompileOptions>, bytecodeSize:cpp.Pointer<CSizeT>):cpp.ConstCharStar;
+
+	static inline function compile(source:CString, size:CSizeT, ?options:CompileOptions):Code {
+		var bytecodeSize:CSizeT = 0;
+		var bytecode = _compile(source, size, cpp.Pointer.addressOf(options), cpp.Pointer.addressOf(bytecodeSize));
+		var rv = new Code();
+		rv.code = bytecode;
+		rv.size = bytecodeSize;
+		return rv;
+	};
 
 	@:native("luau_load")
-	static function luau_load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
+	static function _load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
+
+	static inline function load(L:State, name:String, bytecode:Code, mode:Int):Int {
+		return _load(L, name, bytecode.code, bytecode.size, mode);
+	}
 
 	@:native("lua_tolstring")
 	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
 
-	static inline function tostring(L:State, idx:Int):CString {
-		return tolstring(L, idx, null);
-	}
+	@:native("lua_tostring")
+	static function tostring(L:State, idx:Int):CString;
 
 	/**
 	 * Pop n elements from the stack.
