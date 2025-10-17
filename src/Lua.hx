@@ -127,6 +127,9 @@ extern class Lua {
 	@:native("luaL_newstate")
 	static function newstate():State;
 
+	@:native("lua_close")
+	static function close(L:State):Void;
+
 	// FIXME the options type is complex and needs to be full externed
 	@:native("luau_compile")
 	static function _compile(source:CString, size:CSizeT, options:cpp.Pointer<CompileOptions>, bytecodeSize:cpp.Pointer<CSizeT>):cpp.ConstCharStar;

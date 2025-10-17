@@ -3,9 +3,10 @@ package;
 import Lua.CSizeT;
 import Lua.CompileOptions;
 import Lua.LuaStatus;
+import utest.Assert;
 
-class Main {
-	public static function main() {
+class TestCompile extends utest.Test {
+	function testSimpleCompile():Void {
 		var L = Lua.newstate();
 		// var source = "a = 7 + 11 - 12 * 12";
 		// var source = "a = 7 + 11 - 12 * 12; a = a + 1;";
@@ -30,7 +31,10 @@ class Main {
 		} else {
 			trace('Error: "a"" is not a number.');
 		}
-		trace('Lua.MULTRET: ${Lua.MULTRET}');
-		trace('LuaStatus.LUA_YIELD: ${LuaStatus.YIELD}');
+
+		Assert.equals(18, Lua.tonumber(L, -1));
+		Assert.equals(69, byteCode.size);
+
+		Lua.close(L);
 	}
 }
