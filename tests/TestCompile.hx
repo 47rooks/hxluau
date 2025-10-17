@@ -37,4 +37,27 @@ class TestCompile extends utest.Test {
 
 		Lua.close(L);
 	}
+
+	function testCompileError():Void {
+		var L = Lua.newstate();
+
+		// Bad code that will not compile
+		var source = "a = 7 + 1sdfgsfdg1";
+
+		// Cannot pass null so use an empty struct.
+		// Cannot instantiate {} directly as call site, so use a local variable.
+		var options:CompileOptions = {};
+
+		var byteCode = Lua.compile(source, source.length, options);
+		var r = Lua.load(L, "code", byteCode, 0);
+
+		// Note that we have to force the cast to String here because
+		// Lua.tostring returns a CString which is typedef'd to
+		// cpp.ConstCharStar which is not automatically converted to String.
+		var errMsg:String = Lua.tostring(L, -1);
+
+		Assert.equals(1, r);
+		Assert.equals("[string \"code\"]:1: Malformed number", errMsg);
+		Lua.close(L);
+	}
 }

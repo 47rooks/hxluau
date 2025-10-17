@@ -55,7 +55,7 @@ class Code {
 extern class CompileOptions {}
 
 /**
- * Lua status codes.
+ * Lua thread status codes.
  */
 abstract LuaStatus(Int) from Int to Int {
 	@:native("LUA_OK")
@@ -73,6 +73,25 @@ abstract LuaStatus(Int) from Int to Int {
 	@:native("LUA_BREAK")
 	public static var BREAK:Int;
 }
+
+abstract LuaCoStatus(Int) from Int to Int {
+	@:native("LUA_CORUN")
+	public static var CORUN:Int;
+	@:native("LUA_COSUS")
+	public static var COSUS:Int;
+	@:native("LUA_CONOR")
+	public static var CONOR:Int;
+	@:native("LUA_COFIN")
+	public static var COFIN:Int;
+	@:native("LUA_COERR")
+	public static var COERR:Int;
+}
+
+typedef LuaCFunction = cpp.Callable<State->Int>;
+typedef LuaCcontinuation = cpp.Callable<(State, Int) -> Int>;
+
+// typedef for memory allocation functions
+typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, CSizeT) -> cpp.Pointer<Void>>;
 
 @:include("lua.h")
 @:include("lualib.h")
@@ -134,6 +153,20 @@ extern class Lua {
 	@:native("luau_compile")
 	static function _compile(source:CString, size:CSizeT, options:cpp.Pointer<CompileOptions>, bytecodeSize:cpp.Pointer<CSizeT>):cpp.ConstCharStar;
 
+	/**
+	 * Compile the source into bytecode.
+	 * 
+	 * In the case of compilation errors the error message will be placed into
+	 * the return code. The error message will be available when luau_load is
+	 * called to load the bytecode.
+	 * 
+	 * @param source the source text
+	 * @param size the size of the source text
+	 * @param options compiler options
+	 * @return Code an opaque struct containing the compiled bytecode. This
+	 * must not be modified or freed by the caller, and is only to be
+	 * submitted to lua_load.
+	 */
 	static inline function compile(source:CString, size:CSizeT, ?options:CompileOptions):Code {
 		var bytecodeSize:CSizeT = 0;
 		var bytecode = _compile(source, size, cpp.Pointer.addressOf(options), cpp.Pointer.addressOf(bytecodeSize));
@@ -146,8 +179,18 @@ extern class Lua {
 	@:native("luau_load")
 	static function _load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
 
-	static inline function load(L:State, name:String, bytecode:Code, mode:Int):Int {
-		return _load(L, name, bytecode.code, bytecode.size, mode);
+	/**
+	 * Load a chunk of compiled bytecode.
+	 * @param L the Lua state
+	 * @param name an identifier to include in error messages
+	 * @param bytecode the compiled bytecode and its size
+	 * @param env 0 for the current environment or a stack index pointing
+	 * to a table to use as the environment
+	 * @return Int 0 for success, and 1 for failure. Note, this is not a
+	 * LuaStatus value. This is a Luau function not a Lua one.
+	 */
+	static inline function load(L:State, name:String, bytecode:Code, env:Int):Int {
+		return _load(L, name, bytecode.code, bytecode.size, env);
 	}
 
 	@:native("lua_tolstring")
