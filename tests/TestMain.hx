@@ -9,6 +9,6 @@ import utest.ui.Report;
 class TestMain {
 	public static function main() {
 		trace('running');
-		utest.UTest.run([new TestCompile(),]);
+		utest.UTest.run([new TestCompile(), new TestState(), new TestBasicStackOps()]);
 	}
 }

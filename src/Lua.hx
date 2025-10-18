@@ -93,6 +93,84 @@ typedef LuaCcontinuation = cpp.Callable<(State, Int) -> Int>;
 // typedef for memory allocation functions
 typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, CSizeT) -> cpp.Pointer<Void>>;
 
+/**
+ * basic type
+ * FIXME Not sure I like LUA_TNONE being outside the enum... but that's
+ * how Luau did it
+ */
+@:native("LUA_TNONE")
+var NONE:Int;
+
+abstract LuaType(Int) from Int to Int {
+	@:native("LUA_TNIL")
+	public static var NIL:Int;
+	@:native("LUA_TBOOLEAN")
+	public static var BOOLEAN:Int;
+	@:native("LUA_TLIGHTUSERDATA")
+	public static var LIGHTUSERDATA:Int;
+	@:native("LUA_TNUMBER")
+	public static var NUMBER:Int;
+	@:native("LUA_TVECTOR")
+	public static var VECTOR:Int;
+	@:native("LUA_TSTRING")
+	public static var STRING:Int;
+	@:native("LUA_TTABLE")
+	public static var TABLE:Int;
+	@:native("LUA_TFUNCTION")
+	public static var FUNCTION:Int;
+	@:native("LUA_TUSERDATA")
+	public static var USERDATA:Int;
+	@:native("LUA_TTHREAD")
+	public static var THREAD:Int;
+	@:native("LUA_TBUFFER")
+	public static var BUFFER:Int;
+	@:native("LUA_TPROTO")
+	public static var PROTO:Int;
+	@:native("LUA_TUPVAL")
+	public static var UPVAL:Int;
+	@:native("LUA_TDEADKEY")
+	public static var DEADKEY:Int;
+	@:native("LUA_T_COUNT")
+	public static var COUNT:Int;
+}
+
+/**
+ * floating point type
+ * This maps to the Haxe Float which is a double precision 64 bit float.
+ */
+@:native("lua_Number")
+@:scalar
+@:coreType
+@:notNull
+extern abstract LuaNumber from Float to Float {}
+
+/**
+ * signed integer type
+ * This maps to a C++ int type which is a 32 bit integer, for
+ * the common case. Note, the Lua language itself does not have
+ * an integer type, only a number type (floating point). This is
+ * only used to allow host languages to push integers into the VM, or
+ * get them back.
+ */
+@:native("lua_Integer")
+@:scalar
+@:coreType
+@:notNull
+extern abstract LuaInteger from Int to Int {}
+
+/**
+ * unsigned integer type
+ * FIXME - determine if this should be 32 or 64 bit
+ * The more I think about this the more I think I need some
+ * C++ based boundary testing to figure out what happens as
+ * these type conversion occur.
+ */
+@:native("lua_Unsigned")
+@:scalar
+@:coreType
+@:notNull
+extern abstract LuaUnsigned from cpp.UInt32 to cpp.UInt32 {}
+
 @:include("lua.h")
 @:include("lualib.h")
 @:include("luacode.h")
@@ -143,12 +221,102 @@ extern class Lua {
 	@:native("lua_ispseudo")
 	static function ispseudo(i:Int):Int;
 
+	/*
+	 * State manipulation
+	 */
+	/**
+	 * Create a new Lua state.
+	 * @return The new Lua state.
+	 */
 	@:native("luaL_newstate")
 	static function newstate():State;
 
+	// FIXME This is the proper C signature but it would only be useful
+	//       for targets that support memory allocation like this.
+	// static function newstate(f:LuaAlloc, ud:cpp.RawPointer<cpp.Void>):State;
+	// @:native("luaL_newstate")
+	// static function newstate(f:LuaAlloc, ud:cpp.RawPointer<cpp.Void>):State;
+
+	/**
+	 * Close a Lua state.
+	 * @param L the state to close
+	 */
 	@:native("lua_close")
 	static function close(L:State):Void;
 
+	@:native("lua_newthread")
+	static function newthread(L:State):State;
+
+	@:native("lua_mainthread")
+	static function mainthread(L:State):State;
+
+	@:native("lua_resetthread")
+	static function resetthread(L:State):Void;
+
+	@:native("lua_isthreadreset")
+	static function isthreadreset(L:State):Int;
+
+	/*
+	 * Basic stack manipulation
+	 */
+	@:native("lua_absindex")
+	static function absindex(L:State, idx:Int):Int;
+
+	@:native("lua_gettop")
+	static function gettop(L:State):Int;
+
+	@:native("lua_settop")
+	static function settop(L:State, idx:Int):Void;
+
+	@:native("lua_pushvalue")
+	static function pushvalue(L:State, idx:Int):Void;
+
+	@:native("lua_remove")
+	static function remove(L:State, idx:Int):Void;
+
+	@:native("lua_insert")
+	static function insert(L:State, idx:Int):Void;
+
+	@:native("lua_replace")
+	static function replace(L:State, idx:Int):Void;
+
+	@:native("lua_checkstack")
+	static function checkstack(L:State, sz:Int):Int;
+
+	@:native("lua_rawcheckstack")
+	static function rawcheckstack(L:State, sz:Int):Void;
+
+	/**
+	 * Move a stack element from one state to another.
+	 * 
+	 * Note, that if the states are related by one having been created as a
+	 * copy of the other using lua_newthread, for example the value will not
+	 * appear to move.
+	 * 
+	 * @param from the source state
+	 * @param to the destination state
+	 * @param n the index of the element to move
+	 */
+	@:native("lua_xmove")
+	static function xmove(from:State, to:State, n:Int):Void;
+
+	/**
+	 * Move a stack element from one state to another by pushing it.
+	 * 
+	 * As with `xmove`, if the states are related by one having been created as
+	 * a copy of the other using lua_newthread, for example the value will not
+	 * appear to move.
+	 * 
+	 * @param from the source state
+	 * @param to the destination state
+	 * @param idx the index of the element to move
+	 */
+	@:native("lua_xpush")
+	static function xpush(from:State, to:State, idx:Int):Void;
+
+	/*
+	 * Compile functions
+	 */
 	// FIXME the options type is complex and needs to be full externed
 	@:native("luau_compile")
 	static function _compile(source:CString, size:CSizeT, options:cpp.Pointer<CompileOptions>, bytecodeSize:cpp.Pointer<CSizeT>):cpp.ConstCharStar;
@@ -176,6 +344,9 @@ extern class Lua {
 		return rv;
 	};
 
+	/*
+	 * `load` and `call` functions (load and run Luau bytecode)
+	 */
 	@:native("luau_load")
 	static function _load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
 
