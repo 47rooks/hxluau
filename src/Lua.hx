@@ -445,7 +445,8 @@ extern class Lua {
 	@:native("lua_topointer")
 	static function topointer(L:State, idx:Int):cpp.Pointer<Void>;
 
-	/*	 * Push functions (C -> stack)
+	/*
+	 * Push functions (C -> stack)
 	 */
 	@:native("lua_pushnil")
 	static function pushnil(L:State):Void;
@@ -453,17 +454,116 @@ extern class Lua {
 	@:native("lua_pushnumber")
 	static function pushnumber(L:State, n:LuaNumber):Void;
 
+	@:native("lua_pushinteger")
+	static function pushinteger(L:State, n:LuaInteger):Void;
+
+	@:native("lua_pushunsigned")
+	static function pushunsigned(L:State, n:LuaUnsigned):Void;
+
+	// FIXME this is a problem - you cannot use a cpp #def
+	//       here as a compile time #if predicate.
+	//       Need to find another way to do this.
+	// if (LuaDefines.VECTOR_SIZE == 4) {
+	// 	@:native("lua_pushvector")
+	// 	static function pushvector(L:State, x:Float, y:Float, z:Float, w:Float):Void;
+	// } else {
 	@:native("lua_pushvector")
 	static function pushvector(L:State, x:Float, y:Float, z:Float):Void;
+	// }
+	@:native("lua_pushlstring")
+	static function pushlstring(L:State, s:CString, len:CSizeT):Void;
 
 	@:native("lua_pushstring")
 	static function pushstring(L:State, s:CString):Void;
 
+	@:native("lua_pushvfstring")
+	static function pushvfstring(L:State, fmt:CString, ap:cpp.Pointer<Void>):Void;
+
+	@:native("lua_pushfstringL")
+	static function pushfstringL(L:State, fmt:CString, ...args):Void;
+
+	@:native("lua_pushcclosurek")
+	static function pushcclosurek(L:State, f:LuaCFunction, n:Int):Void;
+
+	@:native("lua_pushboolean")
+	static function pushboolean(L:State, b:Int):Void;
+
+	@:native("lua_pushthread")
+	static function pushthread(L:State):Void;
+
+	@:native("lua_pushlightuserdatatagged")
+	static function pushlightuserdatatagged(L:State, p:cpp.Pointer<Void>, tag:Int):Void;
+
 	@:native("lua_newuserdatatagged")
 	static function newuserdatatagged(L:State, sz:CSizeT, tag:Int):cpp.Pointer<Void>;
 
-	@:native("lua_newuserdata")
-	static function newuserdata(L:State, sz:CSizeT):cpp.Pointer<Void>;
+	@:native("lua_newuserdatataggedwithmetatable")
+	static function newuserdatataggedwithmetatable(L:State, sz:CSizeT, tag:Int):cpp.Pointer<Void>;
+
+	@:native("lua_newuserdatadtor")
+	static function newuserdatadtor(L:State, sz:CSizeT, dtor:LuaCFunction):cpp.Pointer<Void>;
+
+	@:native("lua_newbuffer")
+	static function newbuffer(L:State, sz:CSizeT):cpp.Pointer<Void>;
+
+	/*
+	 * Get functions (Lua -> stack)
+	 */
+	@:native("lua_gettable")
+	static function gettable(L:State, idx:Int):Void;
+
+	@:native("lua_getfield")
+	static function getfield(L:State, idx:Int, k:CString):Void;
+
+	@:native("lua_rawgetfield")
+	static function rawgetfield(L:State, idx:Int, k:CString):Void;
+
+	@:native("lua_rawget")
+	static function rawget(L:State, idx:Int):Void;
+	@:native("lua_rawgeti")
+	static function rawgeti(L:State, idx:Int, n:LuaInteger):Void;
+
+	@:native("lua_createtable")
+	static function createtable(L:State, narray:Int, nrec:Int):Void;
+
+	@:native("lua_setreadonly")
+	static function setreadonly(L:State, idx:Int, enabled:Int):Void;
+
+	@:native("lua_getreadonly")
+	static function getreadonly(L:State, idx:Int):Int;
+
+	@:native("lua_setsafeenv")
+	static function setsafeenv(L:State, idx:Int, enabled:Int):Void;
+
+	@:native("lua_getmetatable")
+	static function getmetatable(L:State, objindex:Int):Int;
+
+	@:native("lua_getfenv")
+	static function getfenv(L:State, idx:Int):Void;
+
+	/*
+	 * Set functions (stack -> Lua)
+	 */
+	@:native("lua_settable")
+	static function settable(L:State, idx:Int):Void;
+
+	@:native("lua_setfield")
+	static function setfield(L:State, idx:Int, k:CString):Void;
+
+	@:native("lua_rawsetfield")
+	static function rawsetfield(L:State, idx:Int, k:CString):Void;
+
+	@:native("lua_rawset")
+	static function rawset(L:State, idx:Int):Void;
+
+	@:native("lua_rawseti")
+	static function rawseti(L:State, idx:Int, n:LuaInteger):Void;
+
+	@:native("lua_setmetatable")
+	static function setmetatable(L:State, objindex:Int):Void;
+
+	@:native("lua_setfenv")
+	static function setfenv(L:State, idx:Int):Void;
 
 	/*
 	 * Compile functions
@@ -527,6 +627,22 @@ extern class Lua {
 	@:native('lua_pop')
 	static function pop(L:State, n:Int):Void;
 
+	/*
+	 * Some useful macros
+	 */
+	/**
+	 * Convert a value to a number.
+	 *
+	 * @param L The Lua state.
+	 * @param idx The index of the value.
+	 * @return The number.
+	 */
+	@:native('lua_tonumber')
+	static function tonumber(L:State, idx:Int):Float;
+
+	@:native("lua_newuserdata")
+	static function newuserdata(L:State, sz:CSizeT):cpp.Pointer<Void>;
+
 	/**
 	 * Call a function.
 	 *
@@ -537,6 +653,9 @@ extern class Lua {
 	@:native('lua_call')
 	static function call(L:State, nargs:Int, nresults:Int):Void;
 
+	@:native("lua_setglobal")
+	static function setglobal(L:State, s:CString):Int;
+
 	/**
 	 * Get a global value.
 	 *
@@ -546,14 +665,4 @@ extern class Lua {
 	 */
 	@:native('lua_getglobal')
 	static function getglobal(L:State, s:CString):Int;
-
-	/**
-	 * Convert a value to a number.
-	 *
-	 * @param L The Lua state.
-	 * @param idx The index of the value.
-	 * @return The number.
-	 */
-	@:native('lua_tonumber')
-	static function tonumber(L:State, idx:Int):Float;
 }
