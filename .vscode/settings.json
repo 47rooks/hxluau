@@ -1,3 +1,13 @@
 {
-    "editor.wordWrap": "wordWrapColumn"
+    "editor.wordWrap": "wordWrapColumn",
+    "files.associations": {
+        "charconv": "cpp",
+        "ranges": "cpp",
+        "ratio": "cpp",
+        "array": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
+    }
 }

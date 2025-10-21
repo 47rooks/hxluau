@@ -1,5 +1,7 @@
 package;
 
+import haxe.ds.Vector;
+
 @:include("lua.h")
 @:buildXml("
 	<files id='haxe'>
@@ -54,6 +56,14 @@ class Code {
 @:structInit()
 extern class CompileOptions {}
 
+extern enum abstract LuaDefines(Int) from Int to Int {
+	@:native("LUA_VECTOR_SIZE")
+	var VECTOR_SIZE:Int;
+
+	@:native("LUA_TNONE")
+	var NONE:Int;
+}
+
 /**
  * Lua thread status codes.
  */
@@ -95,12 +105,8 @@ typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, C
 
 /**
  * basic type
- * FIXME Not sure I like LUA_TNONE being outside the enum... but that's
- * how Luau did it
+ * LUA_TNONE is in LuaDefines as it outside the enum in Luau
  */
-@:native("LUA_TNONE")
-var NONE:Int;
-
 abstract LuaType(Int) from Int to Int {
 	@:native("LUA_TNIL")
 	public static var NIL:Int;
@@ -315,6 +321,151 @@ extern class Lua {
 	static function xpush(from:State, to:State, idx:Int):Void;
 
 	/*
+	 * Access functions (stack -> C)
+	 */
+	/**
+	 * Check if a value is a number.
+	 *
+	 * @param L The Lua state.
+	 * @param idx The index of the value to check.
+	 * @return 1 if the value is a number, 0 otherwise.
+	 */
+	@:native('lua_isnumber')
+	static function isnumber(L:State, idx:Int):Int;
+
+	@:native("lua_isstring")
+	static function isstring(L:State, idx:Int):Int;
+
+	@:native("lua_iscfunction")
+	static function iscfunction(L:State, idx:Int):Int;
+
+	@:native("lua_isLfunction")
+	static function isLfunction(L:State, idx:Int):Int;
+
+	@:native("lua_isuserdata")
+	static function isuserdata(L:State, idx:Int):Int;
+
+	@:native("lua_type")
+	static function type(L:State, idx:Int):Int;
+
+	@:native("lua_typename")
+	static function typename(L:State, tp:Int):CString;
+
+	@:native("lua_equal")
+	static function equal(L:State, idx1:Int, idx2:Int):Int;
+
+	@:native("lua_rawequal")
+	static function rawequal(L:State, idx1:Int, idx2:Int):Int;
+
+	@:native("lua_lessthan")
+	static function lessthan(L:State, idx1:Int, idx2:Int):Int;
+
+	@:native("lua_tonumberx")
+	static function tonumberx(L:State, idx:Int, isnum:Ref<Int>):Float;
+
+	@:native("lua_tointegerx")
+	static function tointegerx(L:State, idx:Int, isnum:Ref<Int>):Int;
+
+	@:native("lua_tounsignedx")
+	static function tounsignedx(L:State, idx:Int, isnum:Ref<Int>):UInt;
+
+	@:native("lua_tounsigned")
+	static function tounsigned(L:State, idx:Int):UInt;
+
+	@:native("lua_tovector")
+	static function _tovector(L:State, idx:Int):cpp.ConstPointer<cpp.Float32>;
+
+	static inline function tovector(L:State, idx:Int):Vector<Float> {
+		var p = _tovector(L, idx);
+		var rv:Vector<Float> = null;
+		if (p != null) {
+			if (LuaDefines.VECTOR_SIZE == 3) {
+				rv = new Vector<Float>(3);
+			} else {
+				rv = new Vector<Float>(4);
+			}
+			rv[0] = p.get_value();
+			p.inc();
+			rv[1] = p.get_value();
+			p.inc();
+			rv[2] = p.get_value();
+			if (LuaDefines.VECTOR_SIZE == 4) {
+				p.inc();
+				rv[3] = p.get_value();
+			}
+			return rv;
+		}
+		return null;
+	}
+	@:native("lua_toboolean")
+	static function toboolean(L:State, idx:Int):Int;
+
+	@:native("lua_tolstring")
+	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
+
+	@:native("lua_tostringatom")
+	static function tostringatom(L:State, idx:Int, atom:Ref<Int>):CString;
+
+	@:native("lua_tolstringatom")
+	static function tolstringatom(L:State, idx:Int, len:Ref<CSizeT>, atom:Ref<Int>):CString;
+
+	@:native("lua_namecallatom")
+	static function namecallatom(L:State, atom:Ref<Int>):CString;
+
+	@:native("lua_objlen")
+	static function objlen(L:State, idx:Int):Int;
+
+	@:native("lua_tocfunction")
+	static function tocfunction(L:State, idx:Int):LuaCFunction;
+
+	@:native("lua_tolightuserdata")
+	static function tolightuserdata(L:State, idx:Int):cpp.Pointer<Void>;
+
+	@:native("lua_tolightuserdatatagged")
+	static function tolightuserdatatagged(L:State, idx:Int, tag:Int):cpp.Pointer<Void>;
+
+	@:native("lua_touserdata")
+	static function touserdata(L:State, idx:Int):cpp.Pointer<Void>;
+
+	@:native("lua_touserdatatagged")
+	static function touserdatatagged(L:State, idx:Int, tag:Int):cpp.Pointer<Void>;
+
+	@:native("lua_userdatatag")
+	static function userdatatag(L:State, idx:Int):Int;
+
+	@:native("lua_lightuserdatatag")
+	static function lightuserdatatag(L:State, idx:Int):Int;
+
+	@:native("lua_tothread")
+	static function tothread(L:State, idx:Int):State;
+
+	@:native("lua_tobuffer")
+	static function tobuffer(L:State, idx:Int, size:Ref<CSizeT>):cpp.Pointer<Void>;
+
+	@:native("lua_topointer")
+	static function topointer(L:State, idx:Int):cpp.Pointer<Void>;
+
+	/*	 * Push functions (C -> stack)
+	 */
+	@:native("lua_pushnil")
+	static function pushnil(L:State):Void;
+
+	@:native("lua_pushnumber")
+	static function pushnumber(L:State, n:LuaNumber):Void;
+
+	@:native("lua_pushvector")
+	static function pushvector(L:State, x:Float, y:Float, z:Float):Void;
+
+	@:native("lua_pushstring")
+	static function pushstring(L:State, s:CString):Void;
+
+	@:native("lua_newuserdatatagged")
+	static function newuserdatatagged(L:State, sz:CSizeT, tag:Int):cpp.Pointer<Void>;
+
+	@:native("lua_newuserdata")
+	static function newuserdata(L:State, sz:CSizeT):cpp.Pointer<Void>;
+
+	/*
 	 * Compile functions
 	 */
 	// FIXME the options type is complex and needs to be full externed
@@ -364,9 +515,6 @@ extern class Lua {
 		return _load(L, name, bytecode.code, bytecode.size, env);
 	}
 
-	@:native("lua_tolstring")
-	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
-
 	@:native("lua_tostring")
 	static function tostring(L:State, idx:Int):CString;
 
@@ -398,16 +546,6 @@ extern class Lua {
 	 */
 	@:native('lua_getglobal')
 	static function getglobal(L:State, s:CString):Int;
-
-	/**
-	 * Check if a value is a number.
-	 *
-	 * @param L The Lua state.
-	 * @param idx The index of the value to check.
-	 * @return 1 if the value is a number, 0 otherwise.
-	 */
-	@:native('lua_isnumber')
-	static function isnumber(L:State, idx:Int):Int;
 
 	/**
 	 * Convert a value to a number.
