@@ -3,7 +3,9 @@ package;
 import Lua.CSizeT;
 import Lua.CompileOptions;
 import Lua.LuaStatus;
+import TestCoroutines;
 import TestGetFunctions;
+import TestLoadAndCall;
 import utest.Runner;
 import utest.ui.Report;
 
@@ -16,7 +18,9 @@ class TestMain {
 			new TestBasicStackOps(),
 			new TestAccessFunctions(),
 			new TestPushFunctions(),
-			new TestGetFunctions()
+			new TestGetFunctions(),
+			new TestLoadAndCall(),
+			new TestCoroutines()
 		]);
 	}
 }

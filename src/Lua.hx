@@ -566,6 +566,72 @@ extern class Lua {
 	static function setfenv(L:State, idx:Int):Void;
 
 	/*
+	 * `load` and `call` functions (load and run Luau bytecode)
+	 */
+	@:native("luau_load")
+	static function _load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
+
+	/**
+	 * Load a chunk of compiled bytecode.
+	 * @param L the Lua state
+	 * @param name an identifier to include in error messages
+	 * @param bytecode the compiled bytecode and its size
+	 * @param env 0 for the current environment or a stack index pointing
+	 * to a table to use as the environment
+	 * @return Int 0 for success, and 1 for failure. Note, this is not a
+	 * LuaStatus value. This is a Luau function not a Lua one.
+	 */
+	static inline function load(L:State, name:String, bytecode:Code, env:Int):Int {
+		return _load(L, name, bytecode.code, bytecode.size, env);
+	}
+
+	/**
+	 * Call a function.
+	 *
+	 * @param L The Lua state.
+	 * @param nargs The number of arguments.
+	 * @param nresults The number of results.
+	 */
+	@:native('lua_call')
+	static function call(L:State, nargs:Int, nresults:Int):Void;
+
+	@:native("lua_pcall")
+	static function pcall(L:State, nargs:Int, nresults:Int, errfunc:Int):Int;
+
+	@:native("lua_cpcall")
+	static function cpcall(L:State, f:LuaCFunction, ud:cpp.Pointer<Void>):Int;
+
+	/*
+	 * coroutine functions
+	 */
+	@:native("lua_yield")
+	static function yield(L:State, nresults:Int):Int;
+
+	@:native("lua_break")
+	static function break_(L:State):Int;
+
+	@:native("lua_resume")
+	static function resume(L:State, from:State, nargs:Int):Int;
+
+	@:native("lua_resumeerror")
+	static function resumeerror(L:State, from:State):Int;
+
+	@:native("lua_status")
+	static function status(L:State):Int;
+
+	@:native("lua_isyieldable")
+	static function isyieldable(L:State):Int;
+
+	@:native("lua_getthreaddata")
+	static function getthreaddata(L:State):cpp.Pointer<Void>;
+
+	@:native("lua_setthreaddata")
+	static function setthreaddata(L:State, data:cpp.Pointer<Void>):Void;
+
+	@:native("lua_costatus")
+	static function costatus(L:State, co:State):Int;
+
+	/*
 	 * Compile functions
 	 */
 	// FIXME the options type is complex and needs to be full externed
@@ -595,26 +661,6 @@ extern class Lua {
 		return rv;
 	};
 
-	/*
-	 * `load` and `call` functions (load and run Luau bytecode)
-	 */
-	@:native("luau_load")
-	static function _load(L:State, name:String, bytecode:Bytecode, bytecodeSize:CSizeT, mode:Int):Int;
-
-	/**
-	 * Load a chunk of compiled bytecode.
-	 * @param L the Lua state
-	 * @param name an identifier to include in error messages
-	 * @param bytecode the compiled bytecode and its size
-	 * @param env 0 for the current environment or a stack index pointing
-	 * to a table to use as the environment
-	 * @return Int 0 for success, and 1 for failure. Note, this is not a
-	 * LuaStatus value. This is a Luau function not a Lua one.
-	 */
-	static inline function load(L:State, name:String, bytecode:Code, env:Int):Int {
-		return _load(L, name, bytecode.code, bytecode.size, env);
-	}
-
 	@:native("lua_tostring")
 	static function tostring(L:State, idx:Int):CString;
 
@@ -642,16 +688,6 @@ extern class Lua {
 
 	@:native("lua_newuserdata")
 	static function newuserdata(L:State, sz:CSizeT):cpp.Pointer<Void>;
-
-	/**
-	 * Call a function.
-	 *
-	 * @param L The Lua state.
-	 * @param nargs The number of arguments.
-	 * @param nresults The number of results.
-	 */
-	@:native('lua_call')
-	static function call(L:State, nargs:Int, nresults:Int):Void;
 
 	@:native("lua_setglobal")
 	static function setglobal(L:State, s:CString):Int;
