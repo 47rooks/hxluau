@@ -4,8 +4,10 @@ import Lua.CSizeT;
 import Lua.LuaStatus;
 import LuaCode.CompileOptions;
 import TestCoroutines;
+import TestGC;
 import TestGetFunctions;
 import TestLoadAndCall;
+import TestMemoryStats;
 import utest.Runner;
 import utest.ui.Report;
 
@@ -20,7 +22,9 @@ class TestMain {
 			new TestPushFunctions(),
 			new TestGetFunctions(),
 			new TestLoadAndCall(),
-			new TestCoroutines()
+			new TestCoroutines(),
+			new TestGC(),
+			new TestMemoryStats()
 		]);
 	}
 }
