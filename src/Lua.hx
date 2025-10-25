@@ -684,6 +684,64 @@ extern class Lua {
 	/*
 	 * miscellaneous functions
 	 */
+	// FIXME what is l_noret ?
+	@:native("lua_error")
+	static function error(L:State):Int;
+
+	@:native("lua_next")
+	static function next(L:State, idx:Int):Int;
+
+	@:native("lua_rawiter")
+	static function rawiter(L:State, idx:Int, iter:Int):Int;
+
+	@:native("lua_concat")
+	static function concat(L:State, n:Int):Void;
+
+	// FIXME this is a strange one - return is supposed to be uintptr_t
+	@:native("lua_encodepointer")
+	static function encodepointer(L:State, p:cpp.Pointer<Void>):CString;
+
+	@:native("lua_clock")
+	static function clock():Float;
+
+	@:native("lua_setuserdatatag")
+	static function setuserdatatag(L:State, idx:Int, tag:Int):Void;
+
+	// FIXME - this and the next two all need a lot of help
+	@:native("lua_destructor")
+	static function destructor(L:State, idx:Int):LuaCFunction;
+
+	@:native("lua_setuserdatadtor")
+	static function setuserdatadtor(L:State, idx:Int, dtor:LuaCFunction):Void;
+
+	@:native("lua_getuserdatadtor")
+	static function getuserdatadtor(L:State, tag:Int):LuaCFunction;
+
+	// alternative access for metatables already registered with luaL_newmetatable
+	// used by lua_newuserdatataggedwithmetatable to create tagged userdata with the associated metatable assigned
+	@:native("lua_setuserdatametatable")
+	static function setuserdatametatable(L:State, tag:Int):Void;
+
+	@:native("lua_getuserdatametatable")
+	static function getuserdatametatable(L:State, tag:Int):Void;
+
+	@:native("lua_setlightuserdataname")
+	static function setlightuserdataname(L:State, tag:Int, name:CString):Void;
+	@:native("lua_getlightuserdataname")
+	static function getlightuserdataname(L:State, tag:Int):CString;
+
+	@:native("lua_clonefunction")
+	static function clonefunction(L:State, idx:Int):Void;
+
+	@:native("lua_cleartable")
+	static function cleartable(L:State, idx:Int):Void;
+
+	@:native("lua_clonetable")
+	static function clonetable(L:State, idx:Int):Void;
+
+	// FIXME this is going to need a ptr to ptr to void
+	// @:native("lua_getallocf")
+	// static function getallocf(L:State):LuaAlloc;
 	/*
 	 * reference system, can be used to pin objects
 	 */
