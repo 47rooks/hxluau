@@ -215,6 +215,13 @@ extern enum abstract LuaGCop(Int) from Int to Int {
 	public static var SETSTEPSIZE:Int;
 }
 
+extern enum abstract LuaRef(Int) from Int to Int {
+	@:native("LUA_NOREF")
+	public static var NOREF:Int;
+	@:native("LUA_REFNIL")
+	public static var REFNIL:Int;
+}
+
 @:include("lua.h")
 @:include("lualib.h")
 @:include("luacode.h")
@@ -744,6 +751,18 @@ extern class Lua {
 	// static function getallocf(L:State):LuaAlloc;
 	/*
 	 * reference system, can be used to pin objects
+	 */
+	@:native("lua_ref")
+	static function ref(L:State, idx:Int):Int;
+
+	@:native("lua_unref")
+	static function unref(L:State, ref:Int):Void;
+
+	@:native("lua_getref")
+	static function getref(L:State, ref:Int):Int;
+
+	/*
+	 * some useful macros
 	 */
 	@:native("lua_tostring")
 	static function tostring(L:State, idx:Int):CString;

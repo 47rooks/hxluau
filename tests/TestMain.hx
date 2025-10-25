@@ -3,15 +3,18 @@ package;
 import Lua.CSizeT;
 import Lua.LuaStatus;
 import LuaCode.CompileOptions;
+import TestBasicStackOps;
+import TestCompile;
 import TestCoroutines;
-import TestCoroutines;
-import TestGC;
 import TestGC;
 import TestGetFunctions;
 import TestLoadAndCall;
 import TestMemoryStats;
 import TestMetatablesAlt;
 import TestMiscFunctions;
+import TestPushFunctions;
+import TestRef;
+import TestState;
 import utest.Runner;
 import utest.ui.Report;
 
@@ -30,7 +33,8 @@ class TestMain {
 			new TestGC(),
 			new TestMemoryStats(),
 			new TestMiscFunctions(),
-			new TestMetatablesAlt()
+			new TestMetatablesAlt(),
+			new TestRef()
 		]);
 	}
 }
