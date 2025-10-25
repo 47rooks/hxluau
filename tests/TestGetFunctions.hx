@@ -3,7 +3,7 @@ package;
 import Lua.LuaType;
 import Lua.State;
 import Lua;
-import haxe.ds.Vector;
+import LuaCode.CompileOptions;
 import utest.Assert;
 import utest.Test;
 

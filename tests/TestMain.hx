@@ -1,8 +1,8 @@
 package;
 
 import Lua.CSizeT;
-import Lua.CompileOptions;
 import Lua.LuaStatus;
+import LuaCode.CompileOptions;
 import TestCoroutines;
 import TestGetFunctions;
 import TestLoadAndCall;

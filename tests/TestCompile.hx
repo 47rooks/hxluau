@@ -1,11 +1,12 @@
 package;
 
 import Lua.CSizeT;
-import Lua.CompileOptions;
 import Lua.LuaStatus;
+import LuaCode.CompileOptions;
 import utest.Assert;
+import utest.Test;
 
-class TestCompile extends utest.Test {
+class TestCompile extends Test {
 	function testSimpleCompile():Void {
 		var L = Lua.newstate();
 		// var source = "a = 7 + 11 - 12 * 12";
@@ -16,7 +17,7 @@ class TestCompile extends utest.Test {
 		// Cannot instantiate {} directly as call site, so use a local variable.
 		var options:CompileOptions = {};
 
-		var byteCode = Lua.compile(source, source.length, options);
+		var byteCode = LuaCode.compile(source, source.length, options);
 		trace('bytecode length: ${byteCode.size}');
 		var r = Lua.load(L, "code", byteCode, 0);
 		if (r != LuaStatus.OK) {
@@ -48,7 +49,7 @@ class TestCompile extends utest.Test {
 		// Cannot instantiate {} directly as call site, so use a local variable.
 		var options:CompileOptions = {};
 
-		var byteCode = Lua.compile(source, source.length, options);
+		var byteCode = LuaCode.compile(source, source.length, options);
 		var r = Lua.load(L, "code", byteCode, 0);
 
 		// Note that we have to force the cast to String here because

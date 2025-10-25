@@ -1,9 +1,9 @@
 package;
 
-import Lua.LuaCFunction;
 import Lua.LuaType;
 import Lua.State;
 import Lua;
+import LuaCode.CompileOptions;
 import utest.Assert;
 import utest.Test;
 
@@ -21,7 +21,7 @@ class TestLoadAndCall extends Test {
 	public function testLoadAndCallSimpleChunk() {
 		var source = "return 123";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status); // 0 for success
 		Lua.call(L, 0, 1);
@@ -33,7 +33,7 @@ class TestLoadAndCall extends Test {
 	public function testLoadAndCallWithArgs() {
 		var source = "local a, b = ...; return a + b";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);
 		Lua.pushnumber(L, 10);
@@ -47,7 +47,7 @@ class TestLoadAndCall extends Test {
 	public function testLoadSyntaxError() {
 		var source = "return =";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(1, status); // 1 for failure
 	}
@@ -55,7 +55,7 @@ class TestLoadAndCall extends Test {
 	public function testCallNoReturn() {
 		var source = "local x = 5";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);
 		Lua.call(L, 0, 0); // no return values
@@ -65,7 +65,7 @@ class TestLoadAndCall extends Test {
 	public function testPcallSuccess() {
 		var source = "return 99";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);
 		var pcallStatus = Lua.pcall(L, 0, 1, 0);
@@ -78,7 +78,7 @@ class TestLoadAndCall extends Test {
 	public function testPcallError() {
 		var source = "error('fail')";
 		var options:CompileOptions = {};
-		var code = Lua.compile(source, source.length, options);
+		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);
 		var pcallStatus = Lua.pcall(L, 0, 1, 0);
