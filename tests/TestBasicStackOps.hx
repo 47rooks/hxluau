@@ -4,6 +4,13 @@ import Lua;
 import utest.Assert;
 import utest.Test;
 
+/**
+ * Test basic stack operations in Lua.
+ * This includes getting and setting the stack top, pushing values,
+ * removing, inserting, replacing values, checking stack size,
+ * and moving values between stacks.
+ * It also tests absolute indexing and raw stack checks.
+ */
 class TestBasicStackOps extends Test {
 	function testGetSetTop() {
 		var L = Lua.newstate();
