@@ -222,6 +222,27 @@ extern enum abstract LuaRef(Int) from Int to Int {
 	public static var REFNIL:Int;
 }
 
+// FIXME these are the hook cbk types
+// typedef struct lua_Debug lua_Debug; // activation record
+// // Functions to be called by the debugger in specific events
+// typedef void (*lua_Hook)(lua_State* L, lua_Debug* ar);
+// FIXME extern this
+// struct lua_Debug
+// {
+//     const char* name;      // (n)
+//     const char* what;      // (s) `Lua', `C', `main', `tail'
+//     const char* source;    // (s)
+//     const char* short_src; // (s)
+//     int linedefined;       // (s)
+//     int currentline;       // (l)
+//     unsigned char nupvals; // (u) number of upvalues
+//     unsigned char nparams; // (a) number of parameters
+//     char isvararg;         // (a)
+//     void* userdata;        // only valid in luau_callhook
+//     char ssbuf[LUA_IDSIZE];
+// };
+// typedef void (*lua_Coverage)(void* context, const char* function, int linedefined, int depth, const int* hits, size_t size);
+
 @:include("lua.h")
 @:include("lualib.h")
 @:include("luacode.h")
@@ -855,4 +876,29 @@ extern class Lua {
 
 	@:native("lua_pushfstring")
 	static function pushfstring(L:State, fmt:CString, ...args):Void;
+	/*
+	 * Debug API
+	 */
+	@:native("lua_stackdepth")
+	static function stackdepth(L:State):Int;
+	// @:native("lua_getinfo")
+	// static function getinfo(L:State, what:CString, ar:Ref<LuaDebug>):Int;
+	@:native("lua_getargument")
+	static function getargument(L:State, level:Int, n:Int):Int;
+	@:native("lua_getlocal")
+	static function getlocal(L:State, level:Int, n:Int):CString;
+	@:native("lua_setlocal")
+	static function setlocal(L:State, level:Int, n:Int):CString;
+	@:native("lua_getupvalue")
+	static function getupvalue(L:State, funcindex:Int, n:Int):CString;
+	@:native("lua_setupvalue")
+	static function setupvalue(L:State, funcindex:Int, n:Int):CString;
+	@:native("lua_singlestep")
+	static function singlestep(L:State, enabled:Int):Void;
+	@:native("lua_breakpoint")
+	static function breakpoint(L:State, funcindex:Int, line:Int, enabled:Int):Int;
+	// @:native("lua_getcoverage")
+	// static function getcoverage(L:State, funcindex:Int, context:cpp.Pointer<Void>, callback:LuaCoverageCallback):Void;
+	@:native("lua_debugtrace")
+	static function debugtrace(L:State):CString;
 }

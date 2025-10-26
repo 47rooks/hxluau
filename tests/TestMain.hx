@@ -6,6 +6,7 @@ import LuaCode.CompileOptions;
 import TestBasicStackOps;
 import TestCompile;
 import TestCoroutines;
+import TestDebug;
 import TestGC;
 import TestGetFunctions;
 import TestLoadAndCall;
@@ -36,7 +37,8 @@ class TestMain {
 			new TestMiscFunctions(),
 			new TestMetatablesAlt(),
 			new TestRef(),
-			new TestMacros()
+			new TestMacros(),
+			new TestDebug()
 		]);
 	}
 }
