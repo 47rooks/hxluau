@@ -6,11 +6,15 @@ import LuaCode.CompileOptions;
 import utest.Assert;
 import utest.Test;
 
+/**
+ * Compiler tests.
+ */
 class TestCompile extends Test {
+	/**
+	 * This test verifies a basic compile but it also shows how to use the LuaCode.compile function and how to load and execute the resulting bytecode. It checks that the compiled code produces the expected result and that the bytecode length is as expected. This serves as a basic sanity check for the compilation process. It also demonstrates error handling when loading the chunk, ensuring that if there is a compilation error, it
+	 */
 	function testSimpleCompile():Void {
 		var L = Lua.newstate();
-		// var source = "a = 7 + 11 - 12 * 12";
-		// var source = "a = 7 + 11 - 12 * 12; a = a + 1;";
 		var source = "a = 7 + 11";
 
 		// Cannot pass null so use an empty struct.
