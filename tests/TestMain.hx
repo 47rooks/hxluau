@@ -9,6 +9,7 @@ import TestCoroutines;
 import TestGC;
 import TestGetFunctions;
 import TestLoadAndCall;
+import TestMacros;
 import TestMemoryStats;
 import TestMetatablesAlt;
 import TestMiscFunctions;
@@ -34,7 +35,8 @@ class TestMain {
 			new TestMemoryStats(),
 			new TestMiscFunctions(),
 			new TestMetatablesAlt(),
-			new TestRef()
+			new TestRef(),
+			new TestMacros()
 		]);
 	}
 }

@@ -414,9 +414,6 @@ extern class Lua {
 	@:native("lua_tounsignedx")
 	static function tounsignedx(L:State, idx:Int, isnum:Ref<Int>):UInt;
 
-	@:native("lua_tounsigned")
-	static function tounsigned(L:State, idx:Int):UInt;
-
 	@:native("lua_tovector")
 	static function _tovector(L:State, idx:Int):cpp.ConstPointer<cpp.Float32>;
 
@@ -764,21 +761,6 @@ extern class Lua {
 	/*
 	 * some useful macros
 	 */
-	@:native("lua_tostring")
-	static function tostring(L:State, idx:Int):CString;
-
-	/**
-	 * Pop n elements from the stack.
-	 *
-	 * @param L The Lua state.
-	 * @param n The number of elements to pop.
-	 */
-	@:native('lua_pop')
-	static function pop(L:State, n:Int):Void;
-
-	/*
-	 * Some useful macros
-	 */
 	/**
 	 * Convert a value to a number.
 	 *
@@ -786,11 +768,74 @@ extern class Lua {
 	 * @param idx The index of the value.
 	 * @return The number.
 	 */
-	@:native('lua_tonumber')
+	@:native("lua_tonumber")
 	static function tonumber(L:State, idx:Int):Float;
+
+	@:native("lua_tointeger")
+	static function tointeger(L:State, idx:Int):Int;
+
+	@:native("lua_tounsigned")
+	static function tounsigned(L:State, idx:Int):UInt;
+
+	/**
+	 * Pop n elements from the stack.
+	 *
+	 * @param L The Lua state.
+	 * @param n The number of elements to pop.
+	 */
+	@:native("lua_pop")
+	static function pop(L:State, n:Int):Void;
+
+	@:native("lua_newtable")
+	static function newtable(L:State):Void;
 
 	@:native("lua_newuserdata")
 	static function newuserdata(L:State, sz:CSizeT):cpp.Pointer<Void>;
+
+	@:native("lua_strlen")
+	static function strlen(L:State, idx:Int):CSizeT;
+
+	@:native("lua_isfunction")
+	static function isfunction(L:State, idx:Int):Int;
+
+	@:native("lua_istable")
+	static function istable(L:State, idx:Int):Int;
+
+	@:native("lua_islightuserdata")
+	static function islightuserdata(L:State, idx:Int):Int;
+
+	@:native("lua_isnil")
+	static function isnil(L:State, idx:Int):Int;
+
+	@:native("lua_isboolean")
+	static function isboolean(L:State, idx:Int):Int;
+
+	@:native("lua_isvector")
+	static function isvector(L:State, idx:Int):Int;
+
+	@:native("lua_isthread")
+	static function isthread(L:State, idx:Int):Int;
+
+	@:native("lua_isbuffer")
+	static function isbuffer(L:State, idx:Int):Int;
+
+	@:native("lua_isnone")
+	static function isnone(L:State, idx:Int):Int;
+
+	@:native("lua_isnoneornil")
+	static function isnoneornil(L:State, idx:Int):Int;
+
+	@:native("lua_pushliteral")
+	static function pushliteral(L:State, s:CString):Void;
+
+	@:native("lua_pushcfunction")
+	static function pushcfunction(L:State, f:LuaCFunction):Void;
+
+	@:native("lua_pushcclosure")
+	static function pushcclosure(L:State, f:LuaCFunction, n:Int):Void;
+
+	@:native("lua_pushlightuserdata")
+	static function pushlightuserdata(L:State, p:cpp.Pointer<Void>):Void;
 
 	@:native("lua_setglobal")
 	static function setglobal(L:State, s:CString):Int;
@@ -804,4 +849,10 @@ extern class Lua {
 	 */
 	@:native('lua_getglobal')
 	static function getglobal(L:State, s:CString):Int;
+
+	@:native("lua_tostring")
+	static function tostring(L:State, idx:Int):CString;
+
+	@:native("lua_pushfstring")
+	static function pushfstring(L:State, fmt:CString, ...args):Void;
 }
