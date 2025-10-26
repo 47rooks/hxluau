@@ -4,6 +4,9 @@ import Lua;
 import utest.Assert;
 import utest.Test;
 
+/**
+ * Test the Lua state management functions.
+ */
 class TestState extends Test {
 	function testNewThread() {
 		var mainState = Lua.newstate();
