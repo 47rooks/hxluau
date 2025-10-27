@@ -73,7 +73,7 @@ class TestMacros extends Test {
 
 	function testIsBoolean() {
 		var L = Lua.newstate();
-		Lua.pushboolean(L, 1);
+		Lua.pushboolean(L, true);
 		Assert.isTrue(Lua.isboolean(L, -1) == 1);
 		Lua.pop(L, 1);
 		Lua.close(L);

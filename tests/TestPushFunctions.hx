@@ -85,11 +85,11 @@ class TestPushFunctions extends Test {
 
 	function testPushBoolean() {
 		var L = Lua.newstate();
-		Lua.pushboolean(L, 1);
+		Lua.pushboolean(L, true);
 		Assert.equals(LuaType.BOOLEAN, Lua.type(L, -1));
 		Assert.equals(1, Lua.toboolean(L, -1));
 		Lua.settop(L, 0);
-		Lua.pushboolean(L, 0);
+		Lua.pushboolean(L, false);
 		Assert.equals(0, Lua.toboolean(L, -1));
 		Lua.settop(L, 0);
 		Lua.close(L);

@@ -13,7 +13,7 @@ import haxe.ds.Vector;
 @:native("lua_State")
 extern class NativeState {}
 
-typedef State = cpp.Pointer<NativeState>;
+typedef State = cpp.RawPointer<NativeState>;
 
 private abstract CString(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
 	@:from static inline function fromString(s:String):CString {
@@ -79,8 +79,8 @@ abstract LuaCoStatus(Int) from Int to Int {
 	public static var COERR:Int;
 }
 
-typedef LuaCFunction = cpp.Callable<State->Int>;
-typedef LuaCcontinuation = cpp.Callable<(State, Int) -> Int>;
+typedef LuaCFunction = cpp.Callable<(State) -> Int>;
+typedef LuaCContinuation = cpp.Callable<(State, Int) -> Int>;
 
 // typedef for memory allocation functions
 typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, CSizeT) -> cpp.Pointer<Void>>;
@@ -461,7 +461,7 @@ extern class Lua {
 		return null;
 	}
 	@:native("lua_toboolean")
-	static function toboolean(L:State, idx:Int):Int;
+	static function toboolean(L:State, idx:Int):Bool;
 
 	@:native("lua_tolstring")
 	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
@@ -485,7 +485,12 @@ extern class Lua {
 	static function tolightuserdata(L:State, idx:Int):cpp.Pointer<Void>;
 
 	@:native("lua_tolightuserdatatagged")
-	static function tolightuserdatatagged(L:State, idx:Int, tag:Int):cpp.Pointer<Void>;
+	static function _tolightuserdatatagged(L:State, idx:Int, tag:Int):cpp.RawPointer<cpp.Void>;
+
+	static inline function tolightuserdatatagged<T:Any>(L:State, idx:Int, tag:Int):T {
+		var ptr:cpp.Pointer<T> = cast cpp.Pointer.fromRaw(_tolightuserdatatagged(L, idx, tag));
+		return ptr.value;
+	}
 
 	@:native("lua_touserdata")
 	static function touserdata(L:State, idx:Int):cpp.Pointer<Void>;
@@ -549,13 +554,18 @@ extern class Lua {
 	static function pushcclosurek(L:State, f:LuaCFunction, n:Int):Void;
 
 	@:native("lua_pushboolean")
-	static function pushboolean(L:State, b:Int):Void;
+	static function pushboolean(L:State, b:Bool):Void;
 
 	@:native("lua_pushthread")
 	static function pushthread(L:State):Void;
 
 	@:native("lua_pushlightuserdatatagged")
-	static function pushlightuserdatatagged(L:State, p:cpp.Pointer<Void>, tag:Int):Void;
+	static function _pushlightuserdatatagged(L:State, p:cpp.RawPointer<cpp.Void>, tag:Int):Void;
+
+	static inline function pushlightuserdatatagged<T:Any>(L:State, p:T, tag:Int):Void {
+		var ptr:cpp.RawPointer<cpp.Void> = cast cpp.RawPointer.addressOf(p);
+		_pushlightuserdatatagged(L, ptr, tag);
+	}
 
 	@:native("lua_newuserdatatagged")
 	static function newuserdatatagged(L:State, sz:CSizeT, tag:Int):cpp.Pointer<Void>;
@@ -850,7 +860,7 @@ extern class Lua {
 	static function pushliteral(L:State, s:CString):Void;
 
 	@:native("lua_pushcfunction")
-	static function pushcfunction(L:State, f:LuaCFunction):Void;
+	static function pushcfunction(L:State, f:LuaCFunction, debugName:CString):Void;
 
 	@:native("lua_pushcclosure")
 	static function pushcclosure(L:State, f:LuaCFunction, n:Int):Void;

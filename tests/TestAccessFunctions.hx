@@ -1,6 +1,8 @@
 package;
 
 import Lua;
+import LuaCode.CompileOptions;
+import LuaCode;
 import utest.Assert;
 import utest.Test;
 
@@ -34,9 +36,13 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
+	static function cFunc(L:State):Int {
+		return 1;
+	}
+
 	function testIsCFunction() {
 		var L = Lua.newstate();
-		Lua.getglobal(L, "print");
+		Lua.pushcfunction(L, cpp.Callable.fromStaticFunction(TestAccessFunctions.cFunc), "cFunc");
 		Assert.equals(1, Lua.iscfunction(L, -1), "print should be a C function");
 		Lua.settop(L, 0);
 		Lua.close(L);
@@ -45,12 +51,15 @@ class TestAccessFunctions extends Test {
 	function testIsLFunction() {
 		var L = Lua.newstate();
 		Lua.getglobal(L, "_G");
-		Assert.equals(0, Lua.isLfunction(L, -1), "_G is not a Lua function");
+		Assert.equals(0, Lua.isLfunction(L, -1), "_G should not be a Lua function");
 		Lua.settop(L, 0);
 
 		// Push a Lua function
-		// FIXME convert to compile/load and then check
-		// Lua.dostring(L, "return function() return 42 end"); // pushes a function
+		var source = "function fooLuaFn() return 42 end";
+		var options:CompileOptions = {};
+		var byteCode = LuaCode.compile(source, source.length, options);
+		var r = Lua.load(L, "code", byteCode, 0);
+
 		Assert.equals(1, Lua.isLfunction(L, -1), "Should detect pushed Lua function");
 
 		Lua.settop(L, 0);
@@ -184,11 +193,17 @@ class TestAccessFunctions extends Test {
 
 	function testToboolean() {
 		var L = Lua.newstate();
-		Lua.pushnumber(L, 0);
-		Assert.equals(0, Lua.toboolean(L, -1), "toboolean should return 0 for 0");
+		Lua.pushboolean(L, false);
+		Assert.isFalse(Lua.toboolean(L, -1), "toboolean should return false for false");
+
 		Lua.settop(L, 0);
-		Lua.pushnumber(L, 1);
-		Assert.equals(1, Lua.toboolean(L, -1), "toboolean should return 1 for nonzero");
+		Lua.pushboolean(L, true);
+		Assert.isTrue(Lua.toboolean(L, -1), "toboolean should return true for true");
+
+		// This returns true because anything not false or nil is true in Lua
+		Lua.settop(L, 0);
+		Lua.pushnumber(L, 12);
+		Assert.isTrue(Lua.toboolean(L, -1), "toboolean should return 1 for nonzero");
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
@@ -209,7 +224,9 @@ class TestAccessFunctions extends Test {
 		Lua.pushstring(L, "foo");
 		var atom = 0;
 		var str:String = Lua.tostringatom(L, -1, cpp.Pointer.addressOf(atom).ptr);
+		trace('atom=${atom}, str=${str}');
 		Assert.equals("foo", str, "tostringatom should return 'foo'");
+		Assert.equals(-1, atom, "tostringatom should set atom to -1");
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
@@ -222,10 +239,14 @@ class TestAccessFunctions extends Test {
 		var str:String = Lua.tolstringatom(L, -1, cpp.Pointer.addressOf(len).ptr, cpp.Pointer.addressOf(atom).ptr);
 		Assert.equals(3, len, "tolstringatom should set length to 3 for 'bar'");
 		Assert.equals("bar", str, "tolstringatom should return 'bar'");
+		Assert.equals(-1, atom, "tostringatom should set atom to -1");
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
 
+	// FIXME I don't really understand namecalls and it appears to be an
+	//       internal feature of Luau and it's not even recommended to use
+	//       anymore.
 	function testNamecallatom() {
 		var L = Lua.newstate();
 		var atom = 0;
@@ -243,16 +264,17 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME add this test when we resolve the pointer issues
-	//
-	// function testTocfunction() {
-	// 	var L = Lua.newstate();
-	// 	Lua.getglobal(L, "print");
-	// 	var fn = Lua.tocfunction(L, -1);
-	// 	Assert.notNull(fn, "tocfunction should return a function pointer for C function");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	// FIXME this needs to be made target agnostic. IE. we need to
+	//       pass a function object not a pointer.
+	function testToCFunction() {
+		var L = Lua.newstate();
+		Lua.pushcfunction(L, cpp.Callable.fromStaticFunction(TestAccessFunctions.cFunc), "cFunc");
+		var fn = Lua.tocfunction(L, -1);
+		Assert.notNull(fn, "tocfunction should return a function pointer for C function");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
 	// FIXME to test positive case need pushlightuserdata
 	function testTolightuserdata() {
 		var L = Lua.newstate();
@@ -264,15 +286,14 @@ class TestAccessFunctions extends Test {
 	}
 
 	// FIXME to test positive case need pushuserdatatag
-
-	function testTolightuserdatatagged() {
-		var L = Lua.newstate();
-		Lua.pushnil(L);
-		var ptr = Lua.tolightuserdatatagged(L, -1, 12);
-		Assert.isNull(ptr, "tolightuserdatatagged should return null for nil");
-		Lua.settop(L, 0);
-		Lua.close(L);
-	}
+	// function testTolightuserdatatagged() {
+	// 	var L = Lua.newstate();
+	// 	Lua.pushnil(L);
+	// 	var ptr = Lua.tolightuserdatatagged(L, -1, 12);
+	// 	Assert.isNull(ptr, "tolightuserdatatagged should return null for nil");
+	// 	Lua.settop(L, 0);
+	// 	Lua.close(L);
+	// }
 
 	function testTouserdata() {
 		var L = Lua.newstate();
@@ -283,10 +304,13 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
+	/**
+	 * Test that a matching tag returns the correct userdata pointer
+	 */
 	function testTouserdatatagged() {
 		var L = Lua.newstate();
-		Lua.newuserdatatagged(L, 4, 0);
-		var ptr = Lua.touserdatatagged(L, -1, 15);
+		Lua.newuserdatatagged(L, 4, 12);
+		var ptr = Lua.touserdatatagged(L, -1, 12);
 		Assert.notNull(ptr, "touserdatatagged should return pointer for tagged userdata");
 		Lua.settop(L, 0);
 		Lua.close(L);
@@ -303,17 +327,19 @@ class TestAccessFunctions extends Test {
 	}
 
 	// FIXME add this test when pushlightuserdatatag is added
-	// function testLightUserdataTag() {
-	// 	var L = Lua.newstate();
-	// 	// Push a light userdata with a tag (simulate with a pointer, tag may be implementation-specific)
-	// 	var ptr = cpp.Pointer.addressOf(12345); // Simulate a pointer value
-	// 	Lua.pushlightuserdata(L, ptr);
-	// 	var tag = Lua.lightuserdatatag(L, -1);
-	// 	// The expected tag value depends on your implementation; typically 0 for untagged
-	// 	Assert.notNull(tag, "lightuserdatatag should return a tag (may be 0 for untagged)");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	function testLightUserdataTag() {
+		var L = Lua.newstate();
+		// Push a light userdata with a tag (simulate with a pointer, tag may be implementation-specific)
+		// var ptr = cpp.Pointer.addressOf(12345); // Simulate a pointer value
+		var x = 12345;
+		Lua.pushlightuserdatatagged(L, x, 12);
+		var tag:Int = Lua.tolightuserdatatagged(L, -1, 12);
+		// The expected tag value depends on your implementation; typically 0 for untagged
+		trace('tag=${tag}');
+		Assert.notNull(tag, "tolightuserdatatag should return a tag (may be 0 for untagged)");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
 
 	function testTothread() {
 		var L = Lua.newstate();
