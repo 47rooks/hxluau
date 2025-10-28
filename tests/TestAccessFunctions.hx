@@ -275,26 +275,37 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME to test positive case need pushlightuserdata
+	/**
+	 * Test that tolightuserdata returns the correct value. Note that
+	 * the return value needs to be cast and the compiler requires a
+	 * cast to the expected type, even if it's a typed variable.
+	 * This is actually expected by the C - the caller is expected to
+	 * know the type of the light userdata.
+	 */
 	function testTolightuserdata() {
 		var L = Lua.newstate();
-		Lua.pushnil(L);
-		var ptr = Lua.tolightuserdata(L, -1);
-		Assert.isNull(ptr, "tolightuserdata should return null for nil");
+		var x = 12345;
+		Lua.pushlightuserdata(L, x);
+		var rv:Int = Lua.tolightuserdata(L, -1);
+		Assert.equals(x, rv, 'tolightuserdata should return 12345 but returned ${rv}');
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
 
-	// FIXME to test positive case need pushuserdatatag
-	// function testTolightuserdatatagged() {
-	// 	var L = Lua.newstate();
-	// 	Lua.pushnil(L);
-	// 	var ptr = Lua.tolightuserdatatagged(L, -1, 12);
-	// 	Assert.isNull(ptr, "tolightuserdatatagged should return null for nil");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	function testToLightUserdataTag() {
+		var L = Lua.newstate();
+		// Push a light userdata with a tag (simulate with a pointer, tag may be implementation-specific)
+		var x = 12345;
+		Lua.pushlightuserdatatagged(L, x, 12);
+		var tag:Int = Lua.tolightuserdatatagged(L, -1, 12);
+		// The expected tag value depends on your implementation; typically 0 for untagged
+		trace('tag=${tag}');
+		Assert.notNull(tag, "tolightuserdatatag should return a tag (may be 0 for untagged)");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
 
+	// FIXME probably need a more substantial example
 	function testTouserdata() {
 		var L = Lua.newstate();
 		Lua.newuserdata(L, 4);
@@ -316,7 +327,7 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	function testUserdataTag() {
+	function testUserdataTagged() {
 		var L = Lua.newstate();
 		var tag = 123;
 		Lua.newuserdatatagged(L, 8, tag);
@@ -326,17 +337,14 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME add this test when pushlightuserdatatag is added
 	function testLightUserdataTag() {
 		var L = Lua.newstate();
-		// Push a light userdata with a tag (simulate with a pointer, tag may be implementation-specific)
-		// var ptr = cpp.Pointer.addressOf(12345); // Simulate a pointer value
+		// Push a light userdata with a tag
 		var x = 12345;
 		Lua.pushlightuserdatatagged(L, x, 12);
-		var tag:Int = Lua.tolightuserdatatagged(L, -1, 12);
-		// The expected tag value depends on your implementation; typically 0 for untagged
+		var tag:Int = Lua.lightuserdatatag(L, -1);
 		trace('tag=${tag}');
-		Assert.notNull(tag, "tolightuserdatatag should return a tag (may be 0 for untagged)");
+		Assert.equals(12, tag, "lightuserdatatag should return at the tag passed in");
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
@@ -349,18 +357,17 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME add this test when we resolve the pointer issues
-	//       this should be done by calling a generic wrapper and
-	//       having it get the pointers in the cpp impl.
-	// function testTobuffer() {
-	// 	var L = Lua.newstate();
-	// 	var s = "buffer";
-	// 	Lua.pushstring(L, s);
-	// 	var buf = Lua.tobuffer(L, -1, s.length);
-	// 	Assert.notNull(buf, "tobuffer should return a pointer (may be null if not supported)");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	function testTobuffer() {
+		var L = Lua.newstate();
+		var buf = Lua.newbuffer(L, 40);
+		var sz:CSizeT = 0;
+		var bufRtn = Lua.tobuffer(L, -1, cpp.Pointer.addressOf(sz).ptr);
+		Assert.isTrue(Lua.isbuffer(L, -1), "top of stack should be a buffer");
+		Assert.equals(40, sz, "buffer size should be 40");
+		Assert.equals(buf, bufRtn, "tobuffer should return the same buffer pointer as created");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
 
 	function testTopointer() {
 		var L = Lua.newstate();

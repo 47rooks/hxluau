@@ -482,7 +482,12 @@ extern class Lua {
 	static function tocfunction(L:State, idx:Int):LuaCFunction;
 
 	@:native("lua_tolightuserdata")
-	static function tolightuserdata(L:State, idx:Int):cpp.Pointer<Void>;
+	static function _tolightuserdata(L:State, idx:Int):cpp.RawPointer<Void>;
+
+	static inline function tolightuserdata<T:Any>(L:State, idx:Int):T {
+		var ptr:cpp.Pointer<T> = cast cpp.Pointer.fromRaw(_tolightuserdata(L, idx));
+		return ptr.value;
+	}
 
 	@:native("lua_tolightuserdatatagged")
 	static function _tolightuserdatatagged(L:State, idx:Int, tag:Int):cpp.RawPointer<cpp.Void>;
@@ -848,7 +853,7 @@ extern class Lua {
 	static function isthread(L:State, idx:Int):Int;
 
 	@:native("lua_isbuffer")
-	static function isbuffer(L:State, idx:Int):Int;
+	static function isbuffer(L:State, idx:Int):Bool;
 
 	@:native("lua_isnone")
 	static function isnone(L:State, idx:Int):Int;
@@ -866,7 +871,12 @@ extern class Lua {
 	static function pushcclosure(L:State, f:LuaCFunction, n:Int):Void;
 
 	@:native("lua_pushlightuserdata")
-	static function pushlightuserdata(L:State, p:cpp.Pointer<Void>):Void;
+	static function _pushlightuserdata(L:State, p:cpp.RawPointer<cpp.Void>):Void;
+
+	static inline function pushlightuserdata<T:Any>(L:State, p:T):Void {
+		var ptr:cpp.RawPointer<cpp.Void> = cast cpp.RawPointer.addressOf(p);
+		_pushlightuserdata(L, ptr);
+	}
 
 	@:native("lua_setglobal")
 	static function setglobal(L:State, s:CString):Int;

@@ -145,11 +145,13 @@ class TestPushFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME looks weak
-	function testNewBuffer() {
+	// FIXME add this test when we resolve the pointer issues
+	//       this should be done by calling a generic wrapper and
+	//       having it get the pointers in the cpp impl.
+	function testNewbuffer() {
 		var L = Lua.newstate();
-		var ptr = Lua.newbuffer(L, 16);
-		Assert.notNull(ptr);
+		var buf = Lua.newbuffer(L, 100);
+		Assert.isTrue(Lua.isbuffer(L, -1), "top of stack should be a buffer");
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}
