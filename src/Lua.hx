@@ -3,6 +3,7 @@ package;
 import LuaCode.Code;
 import LuaCode.CompileOptions;
 import LuaCode;
+import Types.CString;
 import haxe.ds.Vector;
 
 @:include("lua.h")
@@ -13,20 +14,10 @@ import haxe.ds.Vector;
 @:native("lua_State")
 extern class NativeState {}
 
-typedef State = cpp.RawPointer<NativeState>;
-
-private abstract CString(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
-	@:from static inline function fromString(s:String):CString {
-		return (s : cpp.ConstCharStar);
-	}
-
-	@:to inline function toString():String {
-		return (this : String);
-	}
-}
-
+private typedef _Ref<T> = cpp.Pointer<T>;
+typedef Ref<T> = T;
+typedef State = _Ref<NativeState>;
 typedef CSizeT = cpp.SizeT;
-private typedef Ref<T> = cpp.Star<T>;
 
 private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
 	@:from static inline function fromPointer(p:cpp.ConstCharStar):Bytecode {
@@ -79,7 +70,8 @@ abstract LuaCoStatus(Int) from Int to Int {
 	public static var COERR:Int;
 }
 
-typedef LuaCFunction = cpp.Callable<(State) -> Int>;
+// typedef LuaCFunction = cpp.Callable<State->Int>;
+typedef LuaCFunction = State->Int;
 typedef LuaCContinuation = cpp.Callable<(State, Int) -> Int>;
 
 // typedef for memory allocation functions
@@ -242,6 +234,9 @@ extern enum abstract LuaRef(Int) from Int to Int {
 //     char ssbuf[LUA_IDSIZE];
 // };
 // typedef void (*lua_Coverage)(void* context, const char* function, int linedefined, int depth, const int* hits, size_t size);
+
+@:include("stdarg.h")
+@:native("va_list") extern class CVarList {}
 
 @:include("lua.h")
 @:include("lualib.h")
@@ -427,13 +422,25 @@ extern class Lua {
 	static function lessthan(L:State, idx1:Int, idx2:Int):Int;
 
 	@:native("lua_tonumberx")
-	static function tonumberx(L:State, idx:Int, isnum:Ref<Int>):Float;
+	static function _tonumberx(L:State, idx:Int, isnum:cpp.Star<Int>):Float;
+
+	static inline function tonumberx(L:State, idx:Int, isnum:Ref<Int>):Float {
+		return _tonumberx(L, idx, cpp.Pointer.addressOf(isnum).ptr);
+	};
 
 	@:native("lua_tointegerx")
-	static function tointegerx(L:State, idx:Int, isnum:Ref<Int>):Int;
+	static function _tointegerx(L:State, idx:Int, isnum:cpp.Star<Int>):Int;
+
+	static inline function tointegerx(L:State, idx:Int, isnum:Ref<Int>):Int {
+		return _tointegerx(L, idx, cpp.Pointer.addressOf(isnum).ptr);
+	}
 
 	@:native("lua_tounsignedx")
-	static function tounsignedx(L:State, idx:Int, isnum:Ref<Int>):UInt;
+	static function _tounsignedx(L:State, idx:Int, isnum:cpp.Star<Int>):UInt;
+
+	static inline function tounsignedx(L:State, idx:Int, isnum:Ref<Int>):UInt {
+		return _tounsignedx(L, idx, cpp.Pointer.addressOf(isnum).ptr);
+	}
 
 	@:native("lua_tovector")
 	static function _tovector(L:State, idx:Int):cpp.ConstPointer<cpp.Float32>;
@@ -460,17 +467,30 @@ extern class Lua {
 		}
 		return null;
 	}
+
 	@:native("lua_toboolean")
 	static function toboolean(L:State, idx:Int):Bool;
 
 	@:native("lua_tolstring")
-	static function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString;
+	static function _tolstring(L:State, idx:Int, len:cpp.Star<CSizeT>):CString;
+
+	static inline function tolstring(L:State, idx:Int, len:Ref<CSizeT>):CString {
+		return _tolstring(L, idx, cpp.Pointer.addressOf(len).ptr);
+	}
 
 	@:native("lua_tostringatom")
-	static function tostringatom(L:State, idx:Int, atom:Ref<Int>):CString;
+	static function _tostringatom(L:State, idx:Int, atom:cpp.Star<Int>):CString;
+
+	static inline function tostringatom(L:State, idx:Int, atom:Ref<Int>):CString {
+		return _tostringatom(L, idx, cpp.Pointer.addressOf(atom).ptr);
+	}
 
 	@:native("lua_tolstringatom")
-	static function tolstringatom(L:State, idx:Int, len:Ref<CSizeT>, atom:Ref<Int>):CString;
+	static function _tolstringatom(L:State, idx:Int, len:cpp.Star<CSizeT>, atom:cpp.Star<Int>):CString;
+
+	static inline function tolstringatom(L:State, idx:Int, len:Ref<CSizeT>, atom:Ref<Int>):CString {
+		return _tolstringatom(L, idx, cpp.Pointer.addressOf(len).ptr, cpp.Pointer.addressOf(atom).ptr);
+	}
 
 	@:native("lua_namecallatom")
 	static function namecallatom(L:State, atom:Ref<Int>):CString;
@@ -513,7 +533,11 @@ extern class Lua {
 	static function tothread(L:State, idx:Int):State;
 
 	@:native("lua_tobuffer")
-	static function tobuffer(L:State, idx:Int, size:Ref<CSizeT>):cpp.Pointer<Void>;
+	static function _tobuffer(L:State, idx:Int, size:cpp.Star<CSizeT>):cpp.Pointer<Void>;
+
+	static inline function tobuffer(L:State, idx:Int, size:Ref<CSizeT>):cpp.Pointer<Void> {
+		return _tobuffer(L, idx, cpp.Pointer.addressOf(size).ptr);
+	}
 
 	@:native("lua_topointer")
 	static function topointer(L:State, idx:Int):cpp.Pointer<Void>;
@@ -542,6 +566,7 @@ extern class Lua {
 	// } else {
 	@:native("lua_pushvector")
 	static function pushvector(L:State, x:Float, y:Float, z:Float):Void;
+
 	// }
 	@:native("lua_pushlstring")
 	static function pushlstring(L:State, s:CString, len:CSizeT):Void;
@@ -549,15 +574,21 @@ extern class Lua {
 	@:native("lua_pushstring")
 	static function pushstring(L:State, s:CString):Void;
 
-	@:native("lua_pushvfstring")
-	static function pushvfstring(L:State, fmt:CString, ap:cpp.Pointer<Void>):Void;
-
-	@:native("lua_pushfstringL")
-	static function pushfstringL(L:State, fmt:CString, ...args):Void;
-
-	@:native("lua_pushcclosurek")
-	static function pushcclosurek(L:State, f:LuaCFunction, n:Int):Void;
-
+	// @:native("lua_pushvfstring")
+	// static function _pushvfstring(L:State, fmt:CString, va_list:CVarList):CString;
+	// static inline function pushvfstring(L:State, fmt:CString, ...va_list:Any):Void {
+	// 	// var args:Array<Any> = va_list;
+	// 	_pushvfstring(L, fmt, va_list);
+	// }
+	// @:native("lua_pushfstringL")
+	// static function pushfstringL(L:State, fmt:CString, args:haxe.Rest<Any>):CString;
+	// FIXME - need to figure out how to get cpp.Callable working here
+	// @:native("lua_pushcclosurek")
+	// static function _pushcclosurek(L:State, f:cpp.Callable<LuaCFunction>, debugName:CString, nup:Int, cont:LuaCContinuation):Void;
+	// static inline function pushcclosurek(L:State, f:LuaCFunction, debugName:CString, nup:Int, cont:LuaCContinuation):Void {
+	// 	var fc = cpp.Callable.fromFunction(f);
+	// 	_pushcclosurek(L, fc, debugName, nup, cont);
+	// }
 	@:native("lua_pushboolean")
 	static function pushboolean(L:State, b:Bool):Void;
 
@@ -567,7 +598,7 @@ extern class Lua {
 	@:native("lua_pushlightuserdatatagged")
 	static function _pushlightuserdatatagged(L:State, p:cpp.RawPointer<cpp.Void>, tag:Int):Void;
 
-	static inline function pushlightuserdatatagged<T:Any>(L:State, p:T, tag:Int):Void {
+	static inline function pushlightuserdatatagged<T:Any>(L:State, p:Ref<T>, tag:Int):Void {
 		var ptr:cpp.RawPointer<cpp.Void> = cast cpp.RawPointer.addressOf(p);
 		_pushlightuserdatatagged(L, ptr, tag);
 	}
@@ -598,6 +629,7 @@ extern class Lua {
 
 	@:native("lua_rawget")
 	static function rawget(L:State, idx:Int):Void;
+
 	@:native("lua_rawgeti")
 	static function rawgeti(L:State, idx:Int, n:LuaInteger):Void;
 
@@ -718,6 +750,7 @@ extern class Lua {
 	 */
 	@:native("lua_setmemcat")
 	static function setmemcat(L:State, category:Int):Void;
+
 	@:native("lua_totalbytes")
 	static function totalbytes(L:State, category:Int):CSizeT;
 
@@ -767,6 +800,7 @@ extern class Lua {
 
 	@:native("lua_setlightuserdataname")
 	static function setlightuserdataname(L:State, tag:Int, name:CString):Void;
+
 	@:native("lua_getlightuserdataname")
 	static function getlightuserdataname(L:State, tag:Int):CString;
 
@@ -865,7 +899,17 @@ extern class Lua {
 	static function pushliteral(L:State, s:CString):Void;
 
 	@:native("lua_pushcfunction")
-	static function pushcfunction(L:State, f:LuaCFunction, debugName:CString):Void;
+	static function _pushcfunction(L:State, f:cpp.Callable<LuaCFunction>, debugName:CString):Void;
+
+	/**
+	 * Push a C function onto the stack.
+	 * @param L the Lua state
+	 * @param f note that this must be a static function
+	 * @param debugName a name for debugging purposes
+	 */
+	static inline function pushcfunction(L:State, f:LuaCFunction, debugName:CString):Void {
+		_pushcfunction(L, cpp.Callable.fromStaticFunction(f), debugName);
+	}
 
 	@:native("lua_pushcclosure")
 	static function pushcclosure(L:State, f:LuaCFunction, n:Int):Void;
@@ -896,27 +940,36 @@ extern class Lua {
 
 	@:native("lua_pushfstring")
 	static function pushfstring(L:State, fmt:CString, ...args):Void;
+
 	/*
 	 * Debug API
 	 */
 	@:native("lua_stackdepth")
 	static function stackdepth(L:State):Int;
+
 	// @:native("lua_getinfo")
 	// static function getinfo(L:State, what:CString, ar:Ref<LuaDebug>):Int;
 	@:native("lua_getargument")
 	static function getargument(L:State, level:Int, n:Int):Int;
+
 	@:native("lua_getlocal")
 	static function getlocal(L:State, level:Int, n:Int):CString;
+
 	@:native("lua_setlocal")
 	static function setlocal(L:State, level:Int, n:Int):CString;
+
 	@:native("lua_getupvalue")
 	static function getupvalue(L:State, funcindex:Int, n:Int):CString;
+
 	@:native("lua_setupvalue")
 	static function setupvalue(L:State, funcindex:Int, n:Int):CString;
+
 	@:native("lua_singlestep")
 	static function singlestep(L:State, enabled:Int):Void;
+
 	@:native("lua_breakpoint")
 	static function breakpoint(L:State, funcindex:Int, line:Int, enabled:Int):Int;
+
 	// @:native("lua_getcoverage")
 	// static function getcoverage(L:State, funcindex:Int, context:cpp.Pointer<Void>, callback:LuaCoverageCallback):Void;
 	@:native("lua_debugtrace")

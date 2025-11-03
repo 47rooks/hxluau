@@ -1,5 +1,7 @@
 package;
 
+import Types.CString;
+
 @:include("luacode.h")
 @:buildXml("
 	<files id='haxe'>
@@ -44,7 +46,7 @@ extern class LuaCode {
 	 * must not be modified or freed by the caller, and is only to be
 	 * submitted to lua_load.
 	 */
-	static inline function compile(source:cpp.ConstCharStar, size:cpp.SizeT, ?options:CompileOptions):Code {
+	static inline function compile(source:CString, size:cpp.SizeT, ?options:CompileOptions):Code {
 		var bytecodeSize:cpp.SizeT = 0;
 		var bytecode = _compile(source, size, cpp.Pointer.addressOf(options), cpp.Pointer.addressOf(bytecodeSize));
 		var rv = new Code();

@@ -183,18 +183,17 @@ class TestMacros extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME pointer types are wrong
-	// function testTolString() {
-	// 	var L = Lua.newstate();
-	// 	Lua.pushstring(L, "foobar");
-	// 	var n = 0;
-	// 	var lenRef = cpp.Pointer.addressOf(n);
-	// 	var cstr = Lua.tolstring(L, -1, lenRef);
-	// 	Assert.equals("foobar", cstr);
-	// 	Assert.equals(6, lenRef.get_value());
-	// 	Lua.pop(L, 1);
-	// 	Lua.close(L);
-	// }
+	function testTolstring() {
+		var L = Lua.newstate();
+		Lua.pushstring(L, "abc");
+		var len:Ref<CSizeT> = 0;
+		var str:String = Lua.tolstring(L, -1, len);
+		Assert.equals(3, len, "tolstring should set length to 3 for 'abc'");
+		Assert.equals("abc", str, "tolstring should return 'abc'");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
 	// FIXME needs more work to handle mixed types in the list of
 	// arguments to pushfstring
 	// function testPushFString() {
@@ -236,9 +235,8 @@ class TestMacros extends Test {
 
 	function testPushLightUserdata() {
 		var L = Lua.newstate();
-		var n = 123;
-		var ptr = cpp.Pointer.addressOf(n);
-		Lua.pushlightuserdata(L, cast ptr);
+		var n:Ref<Int> = 123;
+		Lua.pushlightuserdata(L, n);
 		Assert.isTrue(Lua.islightuserdata(L, -1) == 1);
 		Lua.pop(L, 1);
 		Lua.close(L);

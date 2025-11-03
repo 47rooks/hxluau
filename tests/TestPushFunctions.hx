@@ -81,8 +81,37 @@ class TestPushFunctions extends Test {
 	}
 
 	// FIXME figure this out
-	// pushvfstring, pushfstringL, pushcclosurek: not easily testable in Haxe without C varargs or C function pointers
+	// pushvfstring, pushfstringL are not really necessary as you can
+	// use pushstring after formatting in Haxe. And variadics are hard to
+	// map to Haxe Rest arguments.
+	// FIXME this does not yet work.
+	// function testPushFStringL() {
+	// 	var L = Lua.newstate();
+	// 	Lua.pushfstringL(L, "Name: %d Value: %d", 12, 42, 17);
+	// 	var str:String = Lua.tostring(L, -1);
+	// 	Assert.equals("Name: Fred Value: 42", str);
+	// 	Lua.settop(L, 0);
+	// 	Lua.close(L);
+	// }
 
+	static function getClosure():LuaCFunction {
+		var x = 12;
+
+		function closure(L:State):Int {
+			return x + 12;
+		}
+
+		return closure;
+	}
+
+	/* FIXME - need to get a closure pointer or callable
+		function testPushCClousureK() {
+			var L = Lua.newstate();
+			var c:LuaCFunction = getClosure();
+			// var cd:cpp.Callable.CallableData<LuaCFunction> = c;
+			// var callable:cpp.Callable<LuaCFunction> = cd;
+			Lua.pushcclosurek(L, c, "closuretest", 0, null);
+	}*/
 	function testPushBoolean() {
 		var L = Lua.newstate();
 		Lua.pushboolean(L, true);
@@ -103,18 +132,8 @@ class TestPushFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME get rid of pointers
-	// FIXME type of pointer is also a problem
-	// function testPushLightUserdataTagged() {
-	// 	var L = Lua.newstate();
-	// 	var num = 12345;
-	// 	var ptr = cpp.Pointer.addressOf(num);
+	// Tested in TestAccessFunctions
 	// 	Lua.pushlightuserdatatagged(L, ptr, 99);
-	// 	Assert.equals(LuaType.LIGHTUSERDATA, Lua.type(L, -1));
-	// 	Assert.equals(99, Lua.lightuserdatatag(L, -1));
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
 
 	function testNewUserdataTagged() {
 		var L = Lua.newstate();
