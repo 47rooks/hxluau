@@ -93,16 +93,14 @@ class TestPushFunctions extends Test {
 	// 	Lua.settop(L, 0);
 	// 	Lua.close(L);
 	// }
-
-	static function getClosure():LuaCFunction {
-		var x = 12;
-
-		function closure(L:State):Int {
-			return x + 12;
-		}
-
-		return closure;
-	}
+	// fixme reinstate once we work this out
+	// static function getClosure():LuaCFunction {
+	// 	var x = 12;
+	// 	function closure(L:State):Int {
+	// 		return x + 12;
+	// 	}
+	// 	return closure;
+	// }
 
 	/* FIXME - need to get a closure pointer or callable
 		function testPushCClousureK() {

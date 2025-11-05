@@ -14,10 +14,16 @@ import haxe.ds.Vector;
 @:native("lua_State")
 extern class NativeState {}
 
-private typedef _Ref<T> = cpp.Pointer<T>;
+private typedef _Ref<T> = cpp.RawPointer<T>;
 typedef Ref<T> = T;
 typedef State = _Ref<NativeState>;
 typedef CSizeT = cpp.SizeT;
+typedef LuaCFunction = State->Int;
+typedef LuaHaxeStaticFunction = State->Int;
+typedef LuaCContinuation = cpp.Callable<(State, Int) -> Int>;
+
+// typedef for memory allocation functions
+typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, CSizeT) -> cpp.Pointer<Void>>;
 
 private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.ConstCharStar {
 	@:from static inline function fromPointer(p:cpp.ConstCharStar):Bytecode {
@@ -69,13 +75,6 @@ abstract LuaCoStatus(Int) from Int to Int {
 	@:native("LUA_COERR")
 	public static var COERR:Int;
 }
-
-// typedef LuaCFunction = cpp.Callable<State->Int>;
-typedef LuaCFunction = State->Int;
-typedef LuaCContinuation = cpp.Callable<(State, Int) -> Int>;
-
-// typedef for memory allocation functions
-typedef LuaAlloc = cpp.Callable<(cpp.Pointer<Void>, cpp.Pointer<Void>, CSizeT, CSizeT) -> cpp.Pointer<Void>>;
 
 /**
  * basic type
@@ -899,7 +898,7 @@ extern class Lua {
 	static function pushliteral(L:State, s:CString):Void;
 
 	@:native("lua_pushcfunction")
-	static function _pushcfunction(L:State, f:cpp.Callable<LuaCFunction>, debugName:CString):Void;
+	static function _pushcfunction(L:State, f:cpp.Callable<State->Int>, debugName:CString):Void;
 
 	/**
 	 * Push a C function onto the stack.
@@ -907,12 +906,12 @@ extern class Lua {
 	 * @param f note that this must be a static function
 	 * @param debugName a name for debugging purposes
 	 */
-	static inline function pushcfunction(L:State, f:LuaCFunction, debugName:CString):Void {
+	static inline function pushcfunction(L:State, f:LuaHaxeStaticFunction, debugName:CString):Void {
 		_pushcfunction(L, cpp.Callable.fromStaticFunction(f), debugName);
 	}
 
 	@:native("lua_pushcclosure")
-	static function pushcclosure(L:State, f:LuaCFunction, n:Int):Void;
+	static function pushcclosure(L:State, f:cpp.Callable<LuaCFunction>, n:Int):Void;
 
 	@:native("lua_pushlightuserdata")
 	static function _pushlightuserdata(L:State, p:cpp.RawPointer<cpp.Void>):Void;

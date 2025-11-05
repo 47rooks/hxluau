@@ -37,18 +37,26 @@ class TestAccessFunctions extends Test {
 	}
 
 	static function cFunc(L:State):Int {
+		Lua.pushnumber(L, 423);
 		return 1;
 	}
 
-	// FIXME - still broken
-	// function testIsCFunction() {
-	// 	var L = Lua.newstate();
-	// 	// Lua.pushcfunction(L, cpp.Callable.fromStaticFunction(TestAccessFunctions.cFunc), "cFunc");
-	// 	Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
-	// 	Assert.equals(1, Lua.iscfunction(L, -1), "cFunc should be a C function");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	function testIsCFunction() {
+		var L = Lua.newstate();
+		// Set up the C function in the stack
+		Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
+		Assert.equals(1, Lua.iscfunction(L, -1), "cFunc should be a C function");
+
+		// Invoke the C function
+		Lua.call(L, 0, 1);
+
+		// Check the stack top after invocation
+		Assert.equals(LuaType.NUMBER, Lua.type(L, -1), "After calling cFunc, top of stack should be a number");
+		Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
+
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
 
 	function testIsLFunction() {
 		var L = Lua.newstate();
@@ -258,13 +266,24 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME this needs to be made target agnostic. IE. we need to
-	//       pass a function object not a pointer.
+	// FIXME tocfunction does not return a functioning function.
+	// FIXME - assigning a static function to a var does not work
 	// function testToCFunction() {
 	// 	var L = Lua.newstate();
-	// 	Lua.pushcfunction(L, cpp.Callable.fromStaticFunction(TestAccessFunctions.cFunc), "cFunc");
-	// 	var fn = Lua.tocfunction(L, -1);
-	// 	Assert.notNull(fn, "tocfunction should return a function pointer for C function");
+	// 	// Test the function directly
+	// 	var f = TestAccessFunctions.cFunc;
+	// 	f(L);
+	// 	Assert.equals(423.0, Lua.tonumber(L, -1), "Direct call to cFunc should push 423 onto the stack");
+	// 	Lua.settop(L, 0);
+	// 	// Push function and test tocfunction
+	// 	Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
+	// 	var fn:LuaHaxeStaticFunction = Lua.tocfunction(L, -1);
+	// 	Assert.notNull(fn, "tocfunction should return a function pointer");
+	// 	trace('type of fn=${Type.typeof(fn)}, fn=${fn}');
+	// 	// var cFunc = TestAccessFunctions.cFunc;
+	// 	// trace('type of TestAccessFunctions.cFunc=${Type.typeof(cFunc)}');
+	// 	fn(L);
+	// 	Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
 	// 	Lua.settop(L, 0);
 	// 	Lua.close(L);
 	// }
