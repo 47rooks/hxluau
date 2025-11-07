@@ -268,25 +268,27 @@ class TestAccessFunctions extends Test {
 
 	// FIXME tocfunction does not return a functioning function.
 	// FIXME - assigning a static function to a var does not work
-	// function testToCFunction() {
-	// 	var L = Lua.newstate();
-	// 	// Test the function directly
-	// 	var f = TestAccessFunctions.cFunc;
-	// 	f(L);
-	// 	Assert.equals(423.0, Lua.tonumber(L, -1), "Direct call to cFunc should push 423 onto the stack");
-	// 	Lua.settop(L, 0);
-	// 	// Push function and test tocfunction
-	// 	Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
-	// 	var fn:LuaHaxeStaticFunction = Lua.tocfunction(L, -1);
-	// 	Assert.notNull(fn, "tocfunction should return a function pointer");
-	// 	trace('type of fn=${Type.typeof(fn)}, fn=${fn}');
-	// 	// var cFunc = TestAccessFunctions.cFunc;
-	// 	// trace('type of TestAccessFunctions.cFunc=${Type.typeof(cFunc)}');
-	// 	fn(L);
-	// 	Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
+	function testToCFunction() {
+		var L = Lua.newstate();
+
+		// Test the function directly
+		var f = TestAccessFunctions.cFunc;
+		var rv = f(L);
+		Assert.equals(423.0, Lua.tonumber(L, -1), 'Direct call to cFunc should push 423 onto the stack but was ${Lua.tonumber(L, -1)}');
+		trace('rv=${rv}');
+		Lua.settop(L, 0);
+
+		// Push function and test tocfunction returning it and see that it
+		// can be called.
+		Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
+		var fn = Lua.tocfunction(L, -1);
+		Assert.notNull(fn, "tocfunction should return a function pointer");
+		trace('type of fn=${Type.typeof(fn)}, fn=${fn}');
+		fn(L);
+		Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
 
 	/**
 	 * Test that tolightuserdata returns the correct value. Note that

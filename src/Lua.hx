@@ -14,12 +14,25 @@ import haxe.ds.Vector;
 @:native("lua_State")
 extern class NativeState {}
 
-private typedef _Ref<T> = cpp.RawPointer<T>;
+/**
+ * A reference to a Lua object. Note that cpp.Star is used because it
+ * properly generates code that works for a simple C pointer, and 
+ * also generates proper code when used as an argument to a function.
+ * cpp.RawPointer does not generate correct code in such cases though it
+ * is not known why.
+ * 
+ * The current use case for this is pass Lua states around.
+ */
+private typedef _Ref<T> = cpp.Star<T>;
+
 typedef Ref<T> = T;
 typedef State = _Ref<NativeState>;
 typedef CSizeT = cpp.SizeT;
+
+// FIXME this should be deprecated and replaced with LuaHaxeStaticFunction
 typedef LuaCFunction = State->Int;
 typedef LuaHaxeStaticFunction = State->Int;
+typedef LuaHaxeStaticRetFunction = cpp.Callable<State->Int>;
 typedef LuaCContinuation = cpp.Callable<(State, Int) -> Int>;
 
 // typedef for memory allocation functions
@@ -38,7 +51,6 @@ private abstract Bytecode(cpp.ConstCharStar) from cpp.ConstCharStar to cpp.Const
 extern enum abstract LuaDefines(Int) from Int to Int {
 	@:native("LUA_VECTOR_SIZE")
 	var VECTOR_SIZE:Int;
-
 	@:native("LUA_TNONE")
 	var NONE:Int;
 }
@@ -497,8 +509,10 @@ extern class Lua {
 	@:native("lua_objlen")
 	static function objlen(L:State, idx:Int):Int;
 
+	// FIXME this is not a good return type. It works but it should match
+	//       the pushcfunction signature, LuaHaxeStaticFunction.
 	@:native("lua_tocfunction")
-	static function tocfunction(L:State, idx:Int):LuaCFunction;
+	static function tocfunction(L:State, idx:Int):LuaHaxeStaticRetFunction;
 
 	@:native("lua_tolightuserdata")
 	static function _tolightuserdata(L:State, idx:Int):cpp.RawPointer<Void>;
