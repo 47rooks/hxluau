@@ -3,6 +3,7 @@ package;
 import Lua;
 import LuaCode.CompileOptions;
 import LuaCode;
+import Types.CString;
 import utest.Assert;
 import utest.Test;
 
@@ -249,8 +250,18 @@ class TestAccessFunctions extends Test {
 	// FIXME I don't really understand namecalls and it appears to be an
 	//       internal feature of Luau and it's not even recommended to use
 	//       anymore.
+	// static function traceit(str:CString, l:CSizeT):cpp.Int16 {
+	// 	trace('traceit called with str=${str}');
+	// 	return 0;
+	// }
+	// FIXME assigning functions to extern struct fields is hard
+	// Refer https://github.com/luau-lang/luau/blob/ff6d381e57bcd1799d850d7fabe543c0f0980a5d/tests/Conformance.test.cpp#L2157
+	// for a C++ example.
 	// function testNamecallatom() {
 	// 	var L = Lua.newstate();
+	// 	var cbks = Lua.callbacks(L);
+	// 	trace('type of cbks=${Type.typeof(cbks)}, cbks=${cbks}');
+	// 	cbks.value.useratom = cpp.Pointer.addressOf(TestAccessFunctions.traceit);
 	// 	var atom = 0;
 	// 	var str = Lua.namecallatom(L, cpp.Pointer.addressOf(atom).ptr);
 	// 	Assert.isOfType(str, String, "namecallatom should return a string (may be empty)");
@@ -266,8 +277,6 @@ class TestAccessFunctions extends Test {
 		Lua.close(L);
 	}
 
-	// FIXME tocfunction does not return a functioning function.
-	// FIXME - assigning a static function to a var does not work
 	function testToCFunction() {
 		var L = Lua.newstate();
 
@@ -367,8 +376,9 @@ class TestAccessFunctions extends Test {
 	function testTothread() {
 		var L = Lua.newstate();
 		var thread = Lua.newthread(L);
-		var result = Lua.tothread(thread, -1);
+		var result = Lua.tothread(L, -1);
 		Assert.notNull(result, "tothread should return a thread pointer");
+		Assert.equals(thread, result, "tothread should return the same thread pointer as created");
 		Lua.close(L);
 	}
 

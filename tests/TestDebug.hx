@@ -44,6 +44,12 @@ class TestDebug extends Test {
 	// 	Lua.close(L);
 	// }
 
+	/**
+	 * Test setting and unsetting the singlestep boolean.
+	 * The only way to properly test this is with a debuggable
+	 * program to run.
+	 * FIXME - add later if you figure out how.
+	 */
 	function testSingleStep() {
 		var L = Lua.newstate();
 		Lua.singlestep(L, 1);

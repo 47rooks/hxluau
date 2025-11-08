@@ -25,7 +25,13 @@ class TestMacros extends Test {
 		var L = Lua.newstate();
 		Lua.pushstring(L, "4294967295");
 		var u = Lua.tounsigned(L, -1);
-		Assert.equals(4294967295, u);
+
+		// Have to verify by direct comparison rather than using Assert.equals
+		// because Assert.equals with cast to regular Int which in Haxe on cpp
+		// would be a signed 32 bit it, so it will result in -1 being compared
+		// with the expected 4294967295.
+		var ok = u == 4294967295;
+		Assert.isTrue(ok);
 		Lua.close(L);
 	}
 
@@ -178,7 +184,7 @@ class TestMacros extends Test {
 		Lua.pushstring(L, "val");
 		Lua.setfield(L, -2, "key");
 		Lua.getfield(L, -1, "key");
-		Assert.equals("val", Lua.tostring(L, -1));
+		Assert.equals("val", '${Lua.tostring(L, -1)}');
 		Lua.pop(L, 2);
 		Lua.close(L);
 	}

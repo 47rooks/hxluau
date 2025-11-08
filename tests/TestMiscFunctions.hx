@@ -36,8 +36,7 @@ class TestMiscFunctions extends Test {
 		Lua.pushstring(L, "foo");
 		Lua.pushstring(L, "bar");
 		Lua.concat(L, 2);
-		Assert.equals("foobar", Lua.tostring(L, -1));
-		Lua.pop(L, 1);
+		Assert.equals("foobar", '${Lua.tostring(L, -1)}');
 	}
 
 	// FIXME needs work

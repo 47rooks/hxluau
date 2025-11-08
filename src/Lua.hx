@@ -245,7 +245,21 @@ extern enum abstract LuaRef(Int) from Int to Int {
 //     char ssbuf[LUA_IDSIZE];
 // };
 // typedef void (*lua_Coverage)(void* context, const char* function, int linedefined, int depth, const int* hits, size_t size);
+/*Callbacks that can be used to reconfigure behavior of the VM dynamically.
+ * These are shared between all coroutines.
+ *
+ * Note: interrupt is safe to set from an arbitrary thread but all other callbacks
+ * can only be changed when the VM is not running any code */
+// FIXME this does not yet work
 
+@:structAccess
+@:native("lua_Callbacks")
+extern class LuaCallbacks {
+	@:native("useratom")
+	public var useratom:cpp.Pointer<(s:CString, l:CSizeT) -> cpp.Int16>;
+}
+
+@:extern
 @:include("stdarg.h")
 @:native("va_list") extern class CVarList {}
 
@@ -857,6 +871,18 @@ extern class Lua {
 	@:native("lua_tointeger")
 	static function tointeger(L:State, idx:Int):Int;
 
+	/**
+	 * Convert the value at the given index to an unsigned integer.
+	 *
+	 * Note, that on Haxe the exact behaviour here maybe a little odd.
+	 * If you get a UInt and then use it in an Int context it will be
+	 * converted to a regular 32 signed int on, for example cpp. This may
+	 * result in negative numbers where you expect positive.
+	 * 
+	 * @param L the Lua state
+	 * @param idx the index of the value to convert
+	 * @return UInt the converted value
+	 */
 	@:native("lua_tounsigned")
 	static function tounsigned(L:State, idx:Int):UInt;
 
@@ -987,4 +1013,8 @@ extern class Lua {
 	// static function getcoverage(L:State, funcindex:Int, context:cpp.Pointer<Void>, callback:LuaCoverageCallback):Void;
 	@:native("lua_debugtrace")
 	static function debugtrace(L:State):CString;
+
+	// FIXME - this doesn't work yet.
+	@:native("lua_callbacks")
+	static function callbacks(L:State):cpp.Pointer<LuaCallbacks>;
 }
