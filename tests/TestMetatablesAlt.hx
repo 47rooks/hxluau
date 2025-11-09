@@ -16,12 +16,13 @@ class TestMetatablesAlt extends Test {
 		Lua.close(L);
 	}
 
+	// FIXME - this test is bogus
 	public function testSetGetUserdataMetatable() {
 		// Register a metatable for tag 42
 		Lua.setuserdatametatable(L, 42);
 		// Should not throw
 		Lua.getuserdatametatable(L, 42);
-		Assert.isTrue(true);
+		Assert.isTrue(false);
 	}
 
 	public function testSetGetLightUserdataName() {

@@ -10,6 +10,7 @@ import utest.Assert;
 import utest.Test;
 
 // FIXME go through and clean up
+// FIXME need a proper set of coroutine tests - understand Lua coros
 //      verify all tests are useful, add missing tests
 class TestCoroutines extends Test {
 	var L:State;

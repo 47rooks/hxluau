@@ -75,6 +75,7 @@ class TestLoadAndCall extends Test {
 		Lua.pop(L, 1);
 	}
 
+	// FIMXE needs more work - not very robust in checking error handling
 	public function testPcallError() {
 		var source = "error('fail')";
 		var options:CompileOptions = {};

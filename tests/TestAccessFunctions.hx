@@ -48,13 +48,6 @@ class TestAccessFunctions extends Test {
 		Lua.pushcfunction(L, TestAccessFunctions.cFunc, "cFunc");
 		Assert.equals(1, Lua.iscfunction(L, -1), "cFunc should be a C function");
 
-		// Invoke the C function
-		Lua.call(L, 0, 1);
-
-		// Check the stack top after invocation
-		Assert.equals(LuaType.NUMBER, Lua.type(L, -1), "After calling cFunc, top of stack should be a number");
-		Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
-
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}

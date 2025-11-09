@@ -209,7 +209,29 @@ class TestMacros extends Test {
 	// 	Lua.pop(L, 1);
 	// 	Lua.close(L);
 	// }
-	// FIXME these two need funcion refs sorted out
+
+	static function cFunc(L:State):Int {
+		Lua.pushnumber(L, 423);
+		return 1;
+	}
+
+	function testPushStaticFunction() {
+		var L = Lua.newstate();
+		// Set up the C function in the stack
+		Lua.pushcfunction(L, TestMacros.cFunc, "cFunc");
+
+		// Invoke the C function
+		Lua.call(L, 0, 1);
+
+		// Check the stack top after invocation
+		Assert.equals(LuaType.NUMBER, Lua.type(L, -1), "After calling cFunc, top of stack should be a number");
+		Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
+
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
+	// FIXME these two need non-static function refs sorted out
 	// function testPushCFunction() {
 	// 	var L = Lua.newstate();
 	// 	var called = false;
