@@ -23,9 +23,9 @@ extern class NativeState {}
  * 
  * The current use case for this is pass Lua states around.
  */
-private typedef _Ref<T> = cpp.Star<T>;
-
 typedef Ref<T> = T;
+
+private typedef _Ref<T> = cpp.Pointer<T>;
 typedef State = _Ref<NativeState>;
 typedef CSizeT = cpp.SizeT;
 

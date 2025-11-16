@@ -38,7 +38,8 @@ class TestMain {
 			new TestMetatablesAlt(),
 			new TestRef(),
 			new TestMacros(),
-			new TestDebug()
+			new TestDebug(),
+			new TestClassesWithLua()
 		]);
 	}
 }
