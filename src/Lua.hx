@@ -22,6 +22,7 @@ int callback(lua_State *L)
     std::cout << "about call GCRemoveRoot" << std::endl;
 	std::cout<< "callback:after cb():rv:" << rv << std::endl;
 
+	// FIXME root removal needs to be linked to a Lua finalizer - __gc
     // GCRemoveRoot(root);
     // std::cout << "about call delete root" << std::endl;
 
