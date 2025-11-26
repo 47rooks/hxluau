@@ -1,5 +1,7 @@
 package;
 
+import Lua.LuaStatus;
+import Lua.State;
 import Lua;
 import utest.Assert;
 import utest.Test;
@@ -202,6 +204,8 @@ class TestMacros extends Test {
 
 	// FIXME needs more work to handle mixed types in the list of
 	// arguments to pushfstring
+	// Of course this isn't that necessary as you can format in Haxe
+	// and then just pushstring.
 	// function testPushFString() {
 	// 	var L = Lua.newstate();
 	// 	Lua.pushfstring(L, "Hello %s %d", "world", 123);
@@ -209,54 +213,108 @@ class TestMacros extends Test {
 	// 	Lua.pop(L, 1);
 	// 	Lua.close(L);
 	// }
+	// Test value for member functions as C functions
+	var memberVar:String = "";
 
-	static function cFunc(L:State):Int {
+	public function cFunc(L:State):Int {
+		trace('I got called');
+		trace('L=${L}');
 		Lua.pushnumber(L, 423);
+		trace('after push in cFunc:L(-1) type=${Lua.type(L, -1)}');
+		trace('after push in cFunc:L(-1) value=${Lua.tonumber(L, -1)}');
+		memberVar = "called";
 		return 1;
 	}
 
-	// FIXME reinstate
-	// function testPushStaticFunction() {
-	// 	var L = Lua.newstate();
-	// 	// Set up the C function in the stack
-	// 	Lua.pushcfunction(L, TestMacros.cFunc, "cFunc");
-	// 	// Invoke the C function
-	// 	Lua.call(L, 0, 1);
-	// 	// Check the stack top after invocation
-	// 	Assert.equals(LuaType.NUMBER, Lua.type(L, -1), "After calling cFunc, top of stack should be a number");
-	// 	Assert.equals(423.0, Lua.tonumber(L, -1), "After calling cFunc, top of stack should be 423");
-	// 	Lua.settop(L, 0);
-	// 	Lua.close(L);
-	// }
-	// FIXME these two need non-static function refs sorted out
-	// function testPushCFunction() {
-	// 	var L = Lua.newstate();
-	// 	var called = false;
-	// 	var cfunc:Lua.LuaCFunction = function(L) {
-	// 		called = true;
-	// 		return 0;
-	// 	};
-	// 	Lua.pushcfunction(L, cfunc);
-	// 	Assert.isTrue(Lua.iscfunction(L, -1) == 1);
-	// 	Lua.pcall(L, 0, 0, 0);
-	// 	Assert.isTrue(called);
-	// 	Lua.pop(L, 1);
-	// 	Lua.close(L);
-	// }
-	// function testPushCClosure() {
-	// 	var L = Lua.newstate();
-	// 	var called = false;
-	// 	var cfunc:Lua.LuaCFunction = function(L) {
-	// 		called = true;
-	// 		return 0;
-	// 	};
-	// 	Lua.pushcclosure(L, cfunc, 0);
-	// 	Assert.isTrue(Lua.iscfunction(L, -1) == 1);
-	// 	Lua.pcall(L, 0, 0, 0);
-	// 	Assert.isTrue(called);
-	// 	Lua.pop(L, 1);
-	// 	Lua.close(L);
-	// }
+	function testPushMemberFunction() {
+		var L = Lua.newstate();
+		// Set up the C function in the stack
+		trace('about to call shim');
+		Lua.pushcfunction(L, cFunc, "cFunc");
+		trace('called shim');
+		trace('L=${L}');
+		var rv = Lua.pcall(L, 0, 1, 0);
+		trace('called call rv=${rv}, LUA_OK=${LuaStatus.OK}');
+
+		// Check the stack top after invocation
+		trace('L(-1) type=${Lua.type(L, -1)}');
+		trace('gettop=${Lua.gettop(L)}');
+		trace(Lua.type(L, 1));
+		trace(Lua.tonumber(L, 1));
+
+		// Verify the results
+		Assert.equals(LuaType.NUMBER, Lua.type(L, Lua.gettop(L)), "After calling cFunc, top of stack should be a number");
+		Assert.equals(423.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 423");
+		Assert.equals("called", memberVar, "memberVar should be set to 'called'");
+
+		// Clean up
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
+	function testPushMemberFunctionCallTwice() {
+		var L = Lua.newstate();
+		// Set up the C function in the stack and name it in the global table
+		Lua.pushcfunction(L, cFunc, "cFunc");
+		Lua.setglobal(L, "cFunc");
+
+		// Invoke the C function the first time
+		Lua.getglobal(L, "cFunc");
+		var rv = Lua.pcall(L, 0, 1, 0);
+		trace('called call rv=${rv}, LUA_OK=${LuaStatus.OK}');
+
+		// Verify first call results
+		Assert.equals(LuaType.NUMBER, Lua.type(L, Lua.gettop(L)), "After calling cFunc, top of stack should be a number");
+		Assert.equals(423.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 423");
+
+		Lua.pop(L, 1); // pop the result
+
+		// Invoke the C function a second time
+		Lua.getglobal(L, "cFunc");
+		rv = Lua.pcall(L, 0, 1, 0);
+		trace('called call rv=${rv}, LUA_OK=${LuaStatus.OK}');
+
+		// Verify second call results
+		Assert.equals(LuaType.NUMBER, Lua.type(L, Lua.gettop(L)), "After calling cFunc, top of stack should be a number");
+		Assert.equals(423.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 423");
+
+		// Clean up
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
+	function testPushLocalCClosure() {
+		var L = Lua.newstate();
+		var called = false;
+		var cfunc:Lua.LuaCFunction = function(L) {
+			called = true;
+			return 0;
+		};
+		Lua.pushcfunction(L, cfunc, "localCClosure");
+		Assert.isTrue(Lua.iscfunction(L, -1) == 1);
+		Lua.pcall(L, 0, 0, 0);
+		Assert.isTrue(called);
+		Lua.pop(L, 1);
+		Lua.close(L);
+	}
+
+	static public function staticCFunc(L:State):Int {
+		trace('I got called (static)');
+		Lua.pushnumber(L, 524);
+		return 1;
+	}
+
+	function testPushStaticFunction() {
+		var L = Lua.newstate();
+
+		Lua.pushcfunction(L, staticCFunc, "staticCFunc");
+		var rc = Lua.pcall(L, 0, 1, 0);
+		Assert.equals(0, rc, "pcall should return 0");
+		Assert.equals(524.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 524");
+
+		Lua.pop(L, 1);
+		Lua.close(L);
+	}
 
 	function testPushLightUserdata() {
 		var L = Lua.newstate();

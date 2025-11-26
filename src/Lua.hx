@@ -1,18 +1,58 @@
 package;
 
 import LuaCode.Code;
-import LuaCode.CompileOptions;
-import LuaCode;
 import Types.CString;
 import haxe.ds.Vector;
 
-@:include("lua.h")
-@:buildXml("
-	<files id='haxe'>
-		<compilerflag value='-I${haxelib:hxluau}/luau/VM/include'/>
-	</files>")
-@:native("lua_State")
-extern class NativeState {}
+@:cppNamespaceCode('
+#include <iostream>
+#include <lua.h>
+
+int callback(lua_State *L)
+{
+    auto root = static_cast<hx::Object **>(lua_tolightuserdata(L, lua_upvalueindex(1)));
+    std::cout << "callback:root:" << root << std::endl;
+    std::cout << "callback:*root:" << *root << std::endl;
+
+    auto cb = Dynamic(*root);
+    std::cout << "about call cb()" << std::endl;
+	std::cout << "callback:L:" << L << std::endl;
+	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
+    int rv = cb(statePtr);
+    std::cout << "about call GCRemoveRoot" << std::endl;
+	std::cout<< "callback:after cb():rv:" << rv << std::endl;
+
+    // GCRemoveRoot(root);
+    // std::cout << "about call delete root" << std::endl;
+
+    // delete root;
+    return rv;
+}
+
+void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName)
+{
+    hx::Object **root = new hx::Object *{cb.mPtr};
+    GCAddRoot(root);
+    std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
+    std::cout << "wrapper:root:" << root << std::endl;
+    std::cout << "wrapper:*root:" << *root << std::endl;
+
+    lua_pushlightuserdata(L, root);
+    lua_pushcclosure(L, callback, debugName, 1);
+}
+')
+@:headerCode('
+#include <lua.h>
+
+/// @brief This is a C++ wrapper around the C function foo().
+/// It accepts a Haxe Dynamic function object to pass to foo().
+/// @param fn The Haxe Dynamic function object to be called back from foo().
+///           The function signature is not constrained here but must match
+///			  the form expected by foo().
+void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName);
+')
+@:keep
+class LuaHidden {}
 
 /**
  * A reference to a Lua object. Note that cpp.Star is used because it
@@ -24,6 +64,14 @@ extern class NativeState {}
  * The current use case for this is pass Lua states around.
  */
 typedef Ref<T> = T;
+
+@:include("lua.h")
+@:buildXml("
+	<files id='haxe'>
+		<compilerflag value='-I${haxelib:hxluau}/luau/VM/include'/>
+	</files>")
+@:native("lua_State")
+extern class NativeState {}
 
 private typedef _Ref<T> = cpp.Pointer<T>;
 typedef State = _Ref<NativeState>;
@@ -263,6 +311,7 @@ extern class LuaCallbacks {
 @:include("stdarg.h")
 @:native("va_list") extern class CVarList {}
 
+@:include("LuaHidden.h")
 @:include("lua.h")
 @:include("lualib.h")
 @:include("luacode.h")
@@ -937,18 +986,14 @@ extern class Lua {
 	@:native("lua_pushliteral")
 	static function pushliteral(L:State, s:CString):Void;
 
-	@:native("lua_pushcfunction")
-	static function _pushcfunction(L:State, f:cpp.Callable<State->Int>, debugName:CString):Void;
-
 	/**
 	 * Push a C function onto the stack.
 	 * @param L the Lua state
 	 * @param f note that this must be a static function
 	 * @param debugName a name for debugging purposes
 	 */
-	static inline function pushcfunction(L:State, f:LuaHaxeStaticFunction, debugName:CString):Void {
-		_pushcfunction(L, cpp.Callable.fromStaticFunction(f), debugName);
-	}
+	@:native("pushcfunction_wrapper")
+	static function pushcfunction(L:State, f:LuaHaxeStaticFunction, debugName:CString):Void;
 
 	@:native("lua_pushcclosure")
 	static function pushcclosure(L:State, f:cpp.Callable<LuaCFunction>, n:Int):Void;

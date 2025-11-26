@@ -1,8 +1,5 @@
 package;
 
-import Lua.CSizeT;
-import Lua.LuaStatus;
-import LuaCode.CompileOptions;
 import TestBasicStackOps;
 import TestCompile;
 import TestCoroutines;
@@ -17,8 +14,6 @@ import TestMiscFunctions;
 import TestPushFunctions;
 import TestRef;
 import TestState;
-import utest.Runner;
-import utest.ui.Report;
 
 class TestMain {
 	public static function main() {

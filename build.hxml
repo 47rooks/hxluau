@@ -1,9 +1,13 @@
 -lib hxluau
 -lib utest
+-cp tests
 -main TestMain
 -cpp export/cpp
 -D HXCPP_VERBOSE
--D HXCPP_M64
+# -D HXCPP_M64
 #-D HXCPP_CPP17=1
 -D UTEST_PRINT_TESTS
-# -D DEBUG
+-D DEBUG
+# -D NO_PRECOMPILED_HEADERS
+# -D HXCPP-DEBUGGER
+-debug

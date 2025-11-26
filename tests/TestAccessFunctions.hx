@@ -1,9 +1,8 @@
 package;
 
+import Lua.State;
 import Lua;
-import LuaCode.CompileOptions;
 import LuaCode;
-import Types.CString;
 import utest.Assert;
 import utest.Test;
 
