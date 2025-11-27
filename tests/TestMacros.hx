@@ -247,6 +247,10 @@ class TestMacros extends Test {
 		Assert.equals(423.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 423");
 		Assert.equals("called", memberVar, "memberVar should be set to 'called'");
 
+		trace('about to run gc - should run finalizer');
+		Lua.gc(L, LuaGCop.COLLECT, 0); // Force a GC to see if any issues occur
+		trace('ran gc');
+
 		// Clean up
 		Lua.settop(L, 0);
 		Lua.close(L);
@@ -268,6 +272,10 @@ class TestMacros extends Test {
 		Assert.equals(423.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 423");
 
 		Lua.pop(L, 1); // pop the result
+
+		trace('about to run gc - should not run finalizer');
+		Lua.gc(L, LuaGCop.COLLECT, 0); // Force a GC to see if any issues occur
+		trace('ran gc');
 
 		// Invoke the C function a second time
 		Lua.getglobal(L, "cFunc");
@@ -311,6 +319,7 @@ class TestMacros extends Test {
 		var rc = Lua.pcall(L, 0, 1, 0);
 		Assert.equals(0, rc, "pcall should return 0");
 		Assert.equals(524.0, Lua.tonumber(L, Lua.gettop(L)), "After calling cFunc, top of stack should be 524");
+		trace('asserts passed');
 
 		Lua.pop(L, 1);
 		Lua.close(L);

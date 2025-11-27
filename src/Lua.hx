@@ -7,49 +7,51 @@ import haxe.ds.Vector;
 @:cppNamespaceCode('
 #include <iostream>
 #include <lua.h>
-
 int callback(lua_State *L)
 {
-    auto root = static_cast<hx::Object **>(lua_tolightuserdata(L, lua_upvalueindex(1)));
+	std::cout << "callback:entered" << std::endl;
+    auto root = *(static_cast<hx::Object ***>(lua_touserdatatagged(L,
+								  	 			lua_upvalueindex(1), 1)));
     std::cout << "callback:root:" << root << std::endl;
     std::cout << "callback:*root:" << *root << std::endl;
-
     auto cb = Dynamic(*root);
     std::cout << "about call cb()" << std::endl;
 	std::cout << "callback:L:" << L << std::endl;
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
     int rv = cb(statePtr);
-    std::cout << "about call GCRemoveRoot" << std::endl;
-	std::cout<< "callback:after cb():rv:" << rv << std::endl;
-
-	// FIXME root removal needs to be linked to a Lua finalizer - __gc
-    // GCRemoveRoot(root);
-    // std::cout << "about call delete root" << std::endl;
-
-    // delete root;
     return rv;
+}
+
+void gcroot_finalizer (lua_State *L, void *ud) {
+	std::cout << "gcroot_finalizer:entered" << std::endl;
+	auto root = *(static_cast<hx::Object ***>(ud));
+    GCRemoveRoot(root);
+    std::cout << "gcroot_finalizer:about to call delete root" << std::endl;
+	std::cout << "gcroot_finalizer:root:" << root << std::endl;
+    delete root;
 }
 
 void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName)
 {
+	lua_setuserdatadtor(L, 1, gcroot_finalizer);
     hx::Object **root = new hx::Object *{cb.mPtr};
     GCAddRoot(root);
     std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
     std::cout << "wrapper:root:" << root << std::endl;
     std::cout << "wrapper:*root:" << *root << std::endl;
-
-    lua_pushlightuserdata(L, root);
+    hx::Object ** *ud = static_cast<hx::Object ***>(lua_newuserdatatagged(L, sizeof(hx::Object **), 1));
+	*ud = root;
     lua_pushcclosure(L, callback, debugName, 1);
 }
 ')
 @:headerCode('
 #include <lua.h>
 
-/// @brief This is a C++ wrapper around the C function foo().
-/// It accepts a Haxe Dynamic function object to pass to foo().
-/// @param fn The Haxe Dynamic function object to be called back from foo().
-///           The function signature is not constrained here but must match
-///			  the form expected by foo().
+/// @brief This is a C++ wrapper around the C function lua_pushcclosure().
+/// It accepts a Haxe Dynamic function object to pass to lua_pushcclosure().
+/// @param fn The Haxe Dynamic function object to be called back from
+///           lua_pushcclosure(). The function signature is not constrained
+///	          here but must match the form expected by lua_pushcclosure().
 void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName);
 ')
 @:keep
