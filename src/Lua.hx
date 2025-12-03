@@ -9,25 +9,25 @@ import haxe.ds.Vector;
 #include <lua.h>
 int callback(lua_State *L)
 {
-	std::cout << "callback:entered" << std::endl;
+	// std::cout << "callback:entered" << std::endl;
     auto root = *(static_cast<hx::Object ***>(lua_touserdatatagged(L,
 								  	 			lua_upvalueindex(1), 1)));
-    std::cout << "callback:root:" << root << std::endl;
-    std::cout << "callback:*root:" << *root << std::endl;
+    // std::cout << "callback:root:" << root << std::endl;
+    // std::cout << "callback:*root:" << *root << std::endl;
     auto cb = Dynamic(*root);
-    std::cout << "about call cb()" << std::endl;
-	std::cout << "callback:L:" << L << std::endl;
+    // std::cout << "about call cb()" << std::endl;
+	// std::cout << "callback:L:" << L << std::endl;
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
     int rv = cb(statePtr);
     return rv;
 }
 
 void gcroot_finalizer (lua_State *L, void *ud) {
-	std::cout << "gcroot_finalizer:entered" << std::endl;
+	// std::cout << "gcroot_finalizer:entered" << std::endl;
 	auto root = *(static_cast<hx::Object ***>(ud));
     GCRemoveRoot(root);
-    std::cout << "gcroot_finalizer:about to call delete root" << std::endl;
-	std::cout << "gcroot_finalizer:root:" << root << std::endl;
+    // std::cout << "gcroot_finalizer:about to call delete root" << std::endl;
+	// std::cout << "gcroot_finalizer:root:" << root << std::endl;
     delete root;
 }
 
@@ -36,9 +36,9 @@ void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName)
 	lua_setuserdatadtor(L, 1, gcroot_finalizer);
     hx::Object **root = new hx::Object *{cb.mPtr};
     GCAddRoot(root);
-    std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
-    std::cout << "wrapper:root:" << root << std::endl;
-    std::cout << "wrapper:*root:" << *root << std::endl;
+    // std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
+    // std::cout << "wrapper:root:" << root << std::endl;
+    // std::cout << "wrapper:*root:" << *root << std::endl;
     hx::Object ** *ud = static_cast<hx::Object ***>(lua_newuserdatatagged(L, sizeof(hx::Object **), 1));
 	*ud = root;
     lua_pushcclosure(L, callback, debugName, 1);
@@ -701,7 +701,7 @@ extern class Lua {
 	static function gettable(L:State, idx:Int):Void;
 
 	@:native("lua_getfield")
-	static function getfield(L:State, idx:Int, k:CString):Void;
+	static function getfield(L:State, idx:Int, k:CString):Int;
 
 	@:native("lua_rawgetfield")
 	static function rawgetfield(L:State, idx:Int, k:CString):Void;

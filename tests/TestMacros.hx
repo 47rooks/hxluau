@@ -333,4 +333,43 @@ class TestMacros extends Test {
 		Lua.pop(L, 1);
 		Lua.close(L);
 	}
+
+	function testMultipleInstances() {
+		var f1 = new Baa("first");
+		var f2 = new Baa("second");
+
+		var L = Lua.newstate();
+
+		Lua.pushcfunction(L, f1.getName, "getFirstBaaName");
+		Lua.setglobal(L, "getFirstBaaName");
+		Lua.pushcfunction(L, f2.getName, "getSecondBaaName");
+		Lua.setglobal(L, "getSecondBaaName");
+
+		// Call first function
+		Lua.getglobal(L, "getFirstBaaName");
+		Lua.pcall(L, 0, 1, 0);
+		Assert.equals("first", '${Lua.tostring(L, -1)}');
+		Lua.pop(L, 1);
+
+		// Call second function
+		Lua.getglobal(L, "getSecondBaaName");
+		Lua.pcall(L, 0, 1, 0);
+		Assert.equals("second", '${Lua.tostring(L, -1)}');
+		Lua.pop(L, 1);
+
+		Lua.close(L);
+	}
+}
+
+class Baa {
+	public var _name:String;
+
+	public function new(name:String) {
+		_name = name;
+	}
+
+	public function getName(L:State):Int {
+		Lua.pushstring(L, _name);
+		return 1;
+	}
 }
