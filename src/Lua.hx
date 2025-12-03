@@ -698,19 +698,19 @@ extern class Lua {
 	 * Get functions (Lua -> stack)
 	 */
 	@:native("lua_gettable")
-	static function gettable(L:State, idx:Int):Void;
+	static function gettable(L:State, idx:Int):Int;
 
 	@:native("lua_getfield")
 	static function getfield(L:State, idx:Int, k:CString):Int;
 
 	@:native("lua_rawgetfield")
-	static function rawgetfield(L:State, idx:Int, k:CString):Void;
+	static function rawgetfield(L:State, idx:Int, k:CString):Int;
 
 	@:native("lua_rawget")
-	static function rawget(L:State, idx:Int):Void;
+	static function rawget(L:State, idx:Int):Int;
 
 	@:native("lua_rawgeti")
-	static function rawgeti(L:State, idx:Int, n:LuaInteger):Void;
+	static function rawgeti(L:State, idx:Int, n:LuaInteger):Int;
 
 	@:native("lua_createtable")
 	static function createtable(L:State, narray:Int, nrec:Int):Void;
@@ -749,10 +749,10 @@ extern class Lua {
 	static function rawseti(L:State, idx:Int, n:LuaInteger):Void;
 
 	@:native("lua_setmetatable")
-	static function setmetatable(L:State, objindex:Int):Void;
+	static function setmetatable(L:State, objindex:Int):Int;
 
 	@:native("lua_setfenv")
-	static function setfenv(L:State, idx:Int):Void;
+	static function setfenv(L:State, idx:Int):Int;
 
 	/*
 	 * `load` and `call` functions (load and run Luau bytecode)

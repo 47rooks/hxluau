@@ -33,7 +33,8 @@ class TestGetFunctions extends Test {
 		Lua.createtable(L, 0, 1);
 		Lua.pushnumber(L, 123);
 		Lua.setfield(L, -2, "foo");
-		Lua.getfield(L, -1, "foo");
+		var ret = Lua.getfield(L, -1, "foo");
+		Assert.equals(LuaType.NUMBER, ret, 'getfield return ${ret} instead of NUMBER');
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1));
 		Assert.equals(123.0, Lua.tonumber(L, -1));
 		Lua.pop(L, 2);
@@ -43,7 +44,8 @@ class TestGetFunctions extends Test {
 		Lua.createtable(L, 0, 1);
 		Lua.pushnumber(L, 99);
 		Lua.setfield(L, -2, "bar");
-		Lua.rawgetfield(L, -1, "bar");
+		var ret = Lua.rawgetfield(L, -1, "bar");
+		Assert.equals(LuaType.NUMBER, ret, 'getfield return ${ret} instead of TNUMBER');
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1));
 		Assert.equals(99.0, Lua.tonumber(L, -1));
 		Lua.pop(L, 2);
@@ -57,9 +59,9 @@ class TestGetFunctions extends Test {
 
 		// Push key to get and then get the value
 		Lua.pushnumber(L, 1);
-		Lua.rawget(L, -2);
-
 		// Verify result
+		var ret = Lua.rawget(L, -2);
+		Assert.equals(LuaType.NUMBER, ret, 'rawget returned ${ret} instead of TNUMBER');
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1));
 		Assert.equals(7.0, Lua.tonumber(L, -1));
 		Lua.pop(L, 1);
@@ -69,7 +71,8 @@ class TestGetFunctions extends Test {
 		Lua.createtable(L, 1, 0);
 		Lua.pushnumber(L, 55);
 		Lua.rawseti(L, -2, 1);
-		Lua.rawgeti(L, -1, 1);
+		var ret = Lua.rawgeti(L, -1, 1);
+		Assert.equals(LuaType.NUMBER, ret, 'rawget returned ${ret} instead of TNUMBER');
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1));
 		Assert.equals(55.0, Lua.tonumber(L, -1));
 		Lua.pop(L, 2);
@@ -84,7 +87,8 @@ class TestGetFunctions extends Test {
 	public function testGetMetatable() {
 		Lua.createtable(L, 0, 0);
 		Lua.createtable(L, 0, 0);
-		Lua.setmetatable(L, -2);
+		var retSet = Lua.setmetatable(L, -2);
+		Assert.equals(1, retSet, "setmetatable should return 1 on success");
 		var hasMeta = Lua.getmetatable(L, -1);
 		Assert.equals(1, hasMeta);
 		Assert.equals(LuaType.TABLE, Lua.type(L, -1));
@@ -120,7 +124,8 @@ class TestGetFunctions extends Test {
 		Lua.pushnumber(L, 77);
 		Lua.setfield(L, -2, "baz");
 		Lua.pushstring(L, "baz");
-		Lua.gettable(L, -2);
+		var ret = Lua.gettable(L, -2);
+		Assert.equals(LuaType.NUMBER, ret, 'gettable returned ${ret} instead of NUMBER');
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1));
 		Assert.equals(77.0, Lua.tonumber(L, -1));
 		Lua.pop(L, 2);
