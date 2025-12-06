@@ -22,10 +22,9 @@ cmake --build . --target Luau.Compiler --config RelWithDebInfo
 
 ## Creating a local haxelib and installing the dependent libraries
 
-The local haxelib should be in the `/tests` directory.
+The local haxelib should be in the repo top level directory.
 
 ```
-cd tests
 haxelib newrepo
 
 haxelib install hxcpp
