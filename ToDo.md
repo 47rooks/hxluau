@@ -7,4 +7,4 @@
    * figure out proper build scripts for QoL
      * for security reasons I don't want to ship Luau binary so this has implications for devs
    * test, and if necessary fix, on Windows
-   * rationalize the types and remove development cruft gather up to this point
+   * rationalize the types and remove development cruft gathered up to this point
