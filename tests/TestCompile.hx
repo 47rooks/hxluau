@@ -19,7 +19,7 @@ class TestCompile extends Test {
 
 		// Cannot pass null so use an empty struct.
 		// Cannot instantiate {} directly as call site, so use a local variable.
-		var options:CompileOptions = {};
+		var options:CompileOptions = CompileOptions.create();
 
 		var byteCode = LuaCode.compile(source, source.length, options);
 		trace('bytecode length: ${byteCode.size}');
@@ -51,7 +51,7 @@ class TestCompile extends Test {
 
 		// Cannot pass null so use an empty struct.
 		// Cannot instantiate {} directly as call site, so use a local variable.
-		var options:CompileOptions = {};
+		var options:CompileOptions = CompileOptions.create();
 
 		var byteCode = LuaCode.compile(source, source.length, options);
 		var r = Lua.load(L, "code", byteCode, 0);

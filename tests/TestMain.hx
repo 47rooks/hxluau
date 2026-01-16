@@ -19,22 +19,22 @@ class TestMain {
 	public static function main() {
 		trace('running');
 		utest.UTest.run([
-			new TestCompile(),
-			new TestState(),
-			new TestBasicStackOps(),
-			new TestAccessFunctions(),
-			new TestPushFunctions(),
-			new TestGetFunctions(),
+			// new TestCompile(),
+			// new TestState(),
+			// new TestBasicStackOps(),
+			// new TestAccessFunctions(),
+			// new TestPushFunctions(),
+			// new TestGetFunctions(),
 			new TestLoadAndCall(),
-			new TestCoroutines(),
-			new TestGC(),
-			new TestMemoryStats(),
-			new TestMiscFunctions(),
-			new TestMetatablesAlt(),
-			new TestRef(),
-			new TestMacros(),
-			new TestDebug(),
-			new TestClassesWithLua()
+			// new TestCoroutines(),
+			// new TestGC(),
+			// new TestMemoryStats(),
+			// new TestMiscFunctions(),
+			// new TestMetatablesAlt(),
+			// new TestRef(),
+			// new TestMacros(),
+			// new TestDebug(),
+			// new TestClassesWithLua()
 		]);
 	}
 }

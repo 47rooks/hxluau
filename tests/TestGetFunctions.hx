@@ -98,7 +98,7 @@ class TestGetFunctions extends Test {
 	public function testGetFenv() {
 		// Push a Lua function
 		var source = "function fooLuaFn() return 42 end";
-		var options:CompileOptions = {};
+		var options:CompileOptions = CompileOptions.create();
 		var byteCode = LuaCode.compile(source, source.length, options);
 		var r = Lua.load(L, "code", byteCode, 0);
 

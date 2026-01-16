@@ -8,8 +8,16 @@ import Types.CString;
 		<compilerflag value='-I${haxelib:hxluau}/luau/Compiler/include'/>
 	</files>")
 @:native("lua_CompileOptions")
-@:structInit()
-extern class CompileOptions {}
+@:structAccess
+extern class CompileOptions {
+	@:native("optimizationLevel")
+	var optimizationLevel:Int;
+	@:native("debugLevel")
+	var debugLevel:Int;
+
+	@:native("lua_CompileOptions")
+	static function create():CompileOptions;
+}
 
 /**
  * An opaque struct to hold compiled bytecode and its size.

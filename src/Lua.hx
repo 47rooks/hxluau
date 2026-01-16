@@ -327,6 +327,8 @@ extern class LuaCallbacks {
 		<lib name='${haxelib:hxluau}/luau/cmake/libLuau.VM.a'/>
 		<lib name='${haxelib:hxluau}/luau/cmake/libLuau.Compiler.a'/>
 		<lib name='${haxelib:hxluau}/luau/cmake/libLuau.Ast.a'/>
+		<lib name='${haxelib:hxluau}/luau/cmake/libLuau.Require.a'/>
+		<lib name='${haxelib:hxluau}/luau/cmake/libLuau.RequireNavigator.a'/>
 	</target>")
 extern class Lua {
 	// option for multiple returns in 'lua_pcall' and 'lua_call'
