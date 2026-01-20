@@ -128,12 +128,20 @@ class VFSNavigator {
 
 	function updateRealPaths():NavigationStatus {
 		var result = getRealPath(modulePath);
-		var absoluteResult = getRealPath(absoluteModulePath);
-		if (result.status != Success || absoluteResult.status != Success)
+		if (result.status != Success) {
+			trace('failed to get modulePath ${result.realPath}');
 			return result.status;
+		}
+
+		var absoluteResult = getRealPath(absoluteModulePath);
+		if (absoluteResult.status != Success) {
+			trace('failed to get absoluteModulePath ${absoluteResult.realPath}');
+			return absoluteResult.status;
+		}
 
 		realPath = isAbsolutePath(result.realPath) ? absolutePathPrefix + result.realPath : result.realPath;
 		absoluteRealPath = absolutePathPrefix + absoluteResult.realPath;
+		trace('absoluteRealPath=${absoluteRealPath}');
 		return Success;
 	}
 
@@ -141,11 +149,15 @@ class VFSNavigator {
 		var found = false;
 		var suffix = "";
 
+		trace('modulePath=${modulePath}');
 		var lastSlash = modulePath.lastIndexOf("/");
 		if (lastSlash == -1)
 			throw "Assertion failed";
 		var lastComponent = modulePath.substr(lastSlash + 1);
 
+		// FIXME - this does not handle the case where the require stmt
+		//         inludes the extension.
+		//             eg. local Animal = require('./Animal.luau')
 		if (lastComponent != "init") {
 			var suffixes = [".luau", ".lua"];
 			for (potentialSuffix in suffixes) {

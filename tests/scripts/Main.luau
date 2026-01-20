@@ -1,6 +1,6 @@
 print('hello')
-local Animal = require('./Animal.luau')
-local Dog = require('./Dog.luau')
+local Animal = require('./Animal')
+local Dog = require('./Dog')
 
 local a = Animal.new('animal')
 

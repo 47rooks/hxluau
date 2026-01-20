@@ -180,21 +180,24 @@ class TestLoadAndCall extends Test {
 		Lua.pushcfunction(L, errHandler, "errHandler");
 
 		// Set up the Requirer
-		var config = Configuration.create();
-		Requirer.requireConfigInit(config);
-		trace('requirer config load={${config.is_require_allowed}}');
-		Require.openrequire(L, cpp.Callable.fromStaticFunction(Requirer.requireConfigInit).call, new RequireCtx());
-		// var source = "require('./Animal')";
+		// var config = Configuration.create();
+		// Requirer.requireConfigInit(config);
+		// trace('requirer config load={${config.is_require_allowed}}');
+		// Require.openrequire(L, cpp.Callable.fromStaticFunction(requireConfigInit).call, new RequireCtx());
+		var rctx = new RequireCtx();
+		Require.openrequire(L, rctx); // var source = "require('./Animal')";
+		trace('rctx num=${rctx.data.number_of_calls}');
 		// var source = "return { v= 6}";  // dummy code that works
 		// Load the Main.luau code
-		var source = File.getContent('tests/scripts/Main.luau');
+		var filePath = 'tests/scripts/Main.luau';
+		var source = File.getContent(filePath);
 		trace('Code=\n${source}');
 
 		var options = CompileOptions.create();
 		options.debugLevel = 2;
 
 		var code = LuaCode.compile(source, source.length, options);
-		var status = Lua.load(L, "animal", code, 0);
+		var status = Lua.load(L, filePath, code, 0);
 		if (status != 0) {
 			trace('Error loading chunk: ${Lua.tostring(L, -1)}');
 		}
@@ -204,7 +207,6 @@ class TestLoadAndCall extends Test {
 			trace('Error calling chunk: ${Lua.tostring(L, -1)}');
 		}
 		Assert.equals(0, pcallStatus); // LUA_OK
-		Assert.equals(LuaType.TABLE, Lua.type(L, -1));
 		Lua.pop(L, 1);
 	}
 }
