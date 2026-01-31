@@ -23,9 +23,32 @@ enum abstract WriteResult(Int) from Int to Int {
 @:buildXml("
 	<files id='haxe'>
 		<compilerflag value='-I${haxelib:hxluau}/luau/Require/Runtime/include/Luau'/>
+		<compilerflag value='-DHXLUAU_DEBUG' if='HXLUAU_DEBUG'/>
 	</files>")
 @:headerCode('
 #include <Require.h>
+
+#ifndef HXLUAU_DEBUG
+#define HXLUAU_DEBUG 0
+#endif
+
+/**
+ * Macro for conditional debug tracing based on HXLUAU_DEBUG flag.
+ * This macro wraps std::cout calls with #if HXLUAU_DEBUG preprocessor directives
+ * to improve code readability.
+ */
+#if HXLUAU_DEBUG
+#define HXLUAU_TRACE(msg)              \\
+	do                                 \\
+	{                                  \\
+		std::cout << msg << std::endl; \\
+	} while (0)
+#else
+#define HXLUAU_TRACE(msg) \\
+	do                    \\
+	{                     \\
+	} while (0)
+#endif
 
 /**
  * This is a C++ wrapper around the C function luaopen_require().
@@ -66,21 +89,21 @@ typedef struct luarequire_ctx {
  * @return void
  */
 void gcroot_finalizer(void *ud) {
-	std::cout << "gcroot_finalizer:entered" << std::endl;
+	HXLUAU_TRACE("gcroot_finalizer:entered");
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ud));
-	std::cout << "gcroot_finalizer:ctxp:" << (void *)ctxp << std::endl;
+	HXLUAU_TRACE("gcroot_finalizer:ctxp:" << (void *)ctxp);
 
 	auto ctx = (static_cast<hx::Object **>(ctxp->ctx));
-    std::cout << "gcroot_finalizer:about to call delete root" << std::endl;
-	std::cout << "gcroot_finalizer:root:" << (void *)(ctx) << std::endl;
-	std::cout << "gcroot_finalizer:*root:" << (void *)(*ctx) << std::endl;
+    HXLUAU_TRACE("gcroot_finalizer:about to call delete root");
+	HXLUAU_TRACE("gcroot_finalizer:root:" << (void *)(ctx));
+	HXLUAU_TRACE("gcroot_finalizer:*root:" << (void *)(*ctx));
     GCRemoveRoot(ctx);
 	delete ctx;
 
 	auto callbacks = (static_cast<hx::Object **>(ctxp->callbacks));
-    std::cout << "gcroot_finalizer:about to call delete callbacks" << std::endl;
-	std::cout << "gcroot_finalizer:callbacks:" << (void *)(callbacks) << std::endl;
-	std::cout << "gcroot_finalizer:*callbacks:" << (void *)(*callbacks) << std::endl;
+    HXLUAU_TRACE("gcroot_finalizer:about to call delete callbacks");
+	HXLUAU_TRACE("gcroot_finalizer:callbacks:" << (void *)(callbacks));
+	HXLUAU_TRACE("gcroot_finalizer:*callbacks:" << (void *)(*callbacks));
 	GCRemoveRoot(callbacks);
     delete callbacks;
 }
@@ -122,19 +145,19 @@ static luarequire_WriteResult write(String contents, char* buffer, size_t buffer
  * @return true if requires are allowed, false otherwise
  */
 bool is_require_allowed(lua_State* L, void* ctx, const char* requirer_chunkname) {
-	std::cout << "is_require_allowed called" << std::endl;
+	HXLUAU_TRACE("is_require_allowed called");
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 
 	auto ctxRoot = *ctxp->ctx;
 	auto cb = (static_cast<RequireCallbacks_obj *>(*ctxp->callbacks))->isRequireAllowed;
-	std::cout << "is_require_allowed:cb:" << (void *)cb << std::endl;
+	HXLUAU_TRACE("is_require_allowed:cb:" << (void *)cb);
 
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
 	::String chunkname = ::String(requirer_chunkname);
-	std::cout << "is_require_allowed:chunkname:" << chunkname << std::endl;
-	std::cout << "is_require_allowed:cb:" << (void *)cb << std::endl;
+	HXLUAU_TRACE("is_require_allowed:chunkname:" << chunkname);
+	HXLUAU_TRACE("is_require_allowed:cb:" << (void *)cb);
     bool rv = cb(statePtr, ctxRoot, chunkname);
-    std::cout << "is_require_allowed cb return " << rv << std::endl;
+    HXLUAU_TRACE("is_require_allowed cb return " << rv);
 	return rv;
 }
 
@@ -146,11 +169,11 @@ bool is_require_allowed(lua_State* L, void* ctx, const char* requirer_chunkname)
  * @return luarequire_NavigateResult indicating success, ambiguous, or not found
  */
 luarequire_NavigateResult reset(lua_State* L, void* ctx, const char* requirer_chunkname) {
-	std::cout << "reset called" << std::endl;
+	HXLUAU_TRACE("reset called");
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 
 	auto ctxRoot = *ctxp->ctx;
-	std::cout << "reset: ctxRoot=" << (void *)ctxRoot << std::endl;
+	HXLUAU_TRACE("reset: ctxRoot=" << (void *)ctxRoot);
 
     auto cb = (static_cast<RequireCallbacks_obj *>(*ctxp->callbacks))->reset;
 
@@ -162,7 +185,7 @@ luarequire_NavigateResult reset(lua_State* L, void* ctx, const char* requirer_ch
 
     Dynamic rvd = cb(statePtr, ctxRoot, chunkname);
 	luarequire_NavigateResult rc = static_cast<luarequire_NavigateResult>(static_cast<int>(rvd));
-    std::cout << "reset cb return " << rc << std::endl;
+    HXLUAU_TRACE("reset cb return " << rc);
 	return rc;
 }
 
@@ -176,7 +199,7 @@ luarequire_NavigateResult reset(lua_State* L, void* ctx, const char* requirer_ch
  * @return luarequire_NavigateResult indicating success, ambiguous, or not found
  */
 luarequire_NavigateResult jump_to_alias(lua_State* L, void* ctx, const char* path) {
-	std::cout << "jump_to_alias called" << std::endl;
+	HXLUAU_TRACE("jump_to_alias called");
 	return luarequire_NavigateResult::NAVIGATE_SUCCESS;
 }
 
@@ -187,7 +210,7 @@ luarequire_NavigateResult jump_to_alias(lua_State* L, void* ctx, const char* pat
  * @return luarequire_NavigateResult indicating success, ambiguous, or not found
  */
 luarequire_NavigateResult to_parent(lua_State* L, void* ctx) {
-	std::cout << "to_parent called" << std::endl;
+	HXLUAU_TRACE("to_parent called");
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 
 	auto ctxRoot = *ctxp->ctx;
@@ -197,7 +220,7 @@ luarequire_NavigateResult to_parent(lua_State* L, void* ctx) {
 
     Dynamic rvd = cb(statePtr, ctxRoot);
 	luarequire_NavigateResult rc = static_cast<luarequire_NavigateResult>(static_cast<int>(rvd));
-    std::cout << "reset cb return " << rc << std::endl;
+    HXLUAU_TRACE("reset cb return " << rc);
 	return rc;
 }
 
@@ -209,7 +232,7 @@ luarequire_NavigateResult to_parent(lua_State* L, void* ctx) {
  * @return luarequire_NavigateResult indicating success, ambiguous, or not found
  */
 luarequire_NavigateResult to_child(lua_State* L, void* ctx, const char* name) {
-	std::cout << "to_child called" << std::endl;
+	HXLUAU_TRACE("to_child called");
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 
 	auto ctxRoot = *ctxp->ctx;
@@ -221,7 +244,7 @@ luarequire_NavigateResult to_child(lua_State* L, void* ctx, const char* name) {
     Dynamic rvd = cb(statePtr, ctxRoot, nameStr);
 	// FIXME - look and the new nightly haxe and marshaling of enums.
 	luarequire_NavigateResult rc = static_cast<luarequire_NavigateResult>(static_cast<int>(rvd));
-    std::cout << "to_child cb return " << rc << std::endl;
+    HXLUAU_TRACE("to_child cb return " << rc);
 	return rc;
 }
 
@@ -232,7 +255,7 @@ luarequire_NavigateResult to_child(lua_State* L, void* ctx, const char* name) {
  * @return true if a module is present, false otherwise
  */
 bool is_module_present(lua_State* L, void* ctx) {
-	std::cout << "is_module_present called" << std::endl;
+	HXLUAU_TRACE("is_module_present called");
 
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 	auto ctxRoot = *ctxp->ctx;
@@ -241,7 +264,7 @@ bool is_module_present(lua_State* L, void* ctx) {
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
 
     bool rc = cb(statePtr, ctxRoot);
-    std::cout << "is_module_present cb return " << rc << std::endl;
+    HXLUAU_TRACE("is_module_present cb return " << rc);
 	return rc;
 }
 
@@ -258,7 +281,7 @@ bool is_module_present(lua_State* L, void* ctx) {
  * @return luarequire_WriteResult indicating success, buffer too small,
  */
 luarequire_WriteResult get_chunkname(lua_State* L, void* ctx, char* buffer, size_t buffer_size, size_t* size_out) {
-	std::cout << "get_chunkname called" << std::endl;
+	HXLUAU_TRACE("get_chunkname called");
 
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 	auto ctxRoot = *ctxp->ctx;
@@ -266,7 +289,7 @@ luarequire_WriteResult get_chunkname(lua_State* L, void* ctx, char* buffer, size
 
 	String chunkname = cb(L, ctxRoot);
 
-    std::cout << "get_chunkname cb return " << chunkname << std::endl;
+    HXLUAU_TRACE("get_chunkname cb return " << chunkname);
 	return write(chunkname, buffer, buffer_size, size_out);
 }
 
@@ -283,7 +306,7 @@ luarequire_WriteResult get_chunkname(lua_State* L, void* ctx, char* buffer, size
  * 	   or failure
  */
 luarequire_WriteResult get_loadname(lua_State* L, void* ctx, char* buffer,size_t buffer_size, size_t* size_out) {
-	std::cout << "get_loadname called" << std::endl;
+	HXLUAU_TRACE("get_loadname called");
 
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 	auto ctxRoot = *ctxp->ctx;
@@ -291,7 +314,7 @@ luarequire_WriteResult get_loadname(lua_State* L, void* ctx, char* buffer,size_t
 
 	String loadname = cb(L, ctxRoot);
 
-    std::cout << "get_loadname cb return " << loadname << std::endl;
+    HXLUAU_TRACE("get_loadname cb return " << loadname);
 	return write(loadname, buffer, buffer_size, size_out);
 }
 
@@ -308,7 +331,7 @@ luarequire_WriteResult get_loadname(lua_State* L, void* ctx, char* buffer,size_t
  * 	   or failure
  */
 luarequire_WriteResult get_cache_key(lua_State* L, void* ctx, char* buffer, size_t buffer_size, size_t* size_out) {
-	std::cout << "get_cache_key called" << std::endl;
+	HXLUAU_TRACE("get_cache_key called");
 
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 	auto ctxRoot = *ctxp->ctx;
@@ -319,7 +342,7 @@ luarequire_WriteResult get_cache_key(lua_State* L, void* ctx, char* buffer, size
     // Dynamic rvd = cb(statePtr, ctxRoot, buffer, buffer_size, size_out);
 	String key = cb(statePtr, ctxRoot);
 	// luarequire_WriteResult rc = static_cast<luarequire_WriteResult>(static_cast<int>(rvd));
-    std::cout << "get_cache_key cb return " << key << std::endl;
+    HXLUAU_TRACE("get_cache_key cb return " << key);
 	return write(key, buffer, buffer_size, size_out);
 	// std::cout << "size_out=" << size_out << std::endl;
 	// return rc;
@@ -335,7 +358,7 @@ luarequire_WriteResult get_cache_key(lua_State* L, void* ctx, char* buffer, size
  * @return true if a configuration file is present, false otherwise
  */
 bool is_config_present(lua_State* L, void* ctx) {
-	std::cout << "is_config_present called" << std::endl;
+	HXLUAU_TRACE("is_config_present called");
 	return false;
 }
 
@@ -356,7 +379,7 @@ bool is_config_present(lua_State* L, void* ctx) {
  *         or failure
  */
 luarequire_WriteResult get_alias(lua_State* L, void* ctx, const char* alias, char* buffer, size_t buffer_size, size_t* size_out) {
-	std::cout << "get_alias called" << std::endl;
+	HXLUAU_TRACE("get_alias called");
 	return luarequire_WriteResult::WRITE_SUCCESS;
 }
 
@@ -375,7 +398,7 @@ luarequire_WriteResult get_alias(lua_State* L, void* ctx, const char* alias, cha
  *         or failure
  */
 luarequire_WriteResult get_config(lua_State* L, void* ctx, char* buffer, size_t buffer_size, size_t* size_out) {
-	std::cout << "get_config called" << std::endl;
+	HXLUAU_TRACE("get_config called");
 	return luarequire_WriteResult::WRITE_SUCCESS;
 }
 
@@ -392,7 +415,7 @@ luarequire_WriteResult get_config(lua_State* L, void* ctx, char* buffer, size_t 
  * @return the number of results placed on the stack, or -1 to yield
  */
 int load(lua_State* L, void* ctx, const char* path, const char* chunkname, const char* loadname) {
-	std::cout << "load called" << std::endl;
+	HXLUAU_TRACE("load called");
 
 	luarequire_ctx *ctxp = (static_cast<luarequire_ctx *>(ctx));
 	auto ctxRoot = Dynamic(ctxp->ctx);
@@ -403,7 +426,7 @@ int load(lua_State* L, void* ctx, const char* path, const char* chunkname, const
 	::String chunknameStr = ::String(chunkname);
 	::String loadnameStr = ::String(loadname);
 	int rv = cb(statePtr, ctxRoot, pathStr, chunknameStr, loadnameStr);
-	std::cout << "load cb return " << rv << std::endl;
+	HXLUAU_TRACE("load cb return " << rv);
 
 	return rv;
 }
@@ -452,19 +475,19 @@ void lua_openrequire_wrapper(lua_State *L, Dynamic callbacks, Dynamic ctx)
 		gcroot_finalizer
 	));
 	// FIXME This needs to handle memory alloc failures
-	std::cout << "lua_openrequire_wrapper: about to root args" << std::endl;
+	HXLUAU_TRACE("lua_openrequire_wrapper: about to root args");
 	luarequire_ctx *reqCtx = new luarequire_ctx();
-	std::cout << "lua_openrequire_wrapper: probably bad assignment" << std::endl;
+	HXLUAU_TRACE("lua_openrequire_wrapper: probably bad assignment");
 	reqCtx->ctx = new hx::Object *{ctx.mPtr};
-	std::cout << "lua_openrequire_wrapper: ctx.mPtr=" << (void *)ctx.mPtr << std::endl;
+	HXLUAU_TRACE("lua_openrequire_wrapper: ctx.mPtr=" << (void *)ctx.mPtr);
 
 	GCAddRoot(reqCtx->ctx);
 	reqCtx->callbacks = new hx::Object *{callbacks.mPtr};
 	GCAddRoot(reqCtx->callbacks);
-	std::cout << "lua_openrequire_wrapper: callbacks.mPtr=" << (void *)callbacks.mPtr << std::endl;
+	HXLUAU_TRACE("lua_openrequire_wrapper: callbacks.mPtr=" << (void *)callbacks.mPtr);
 
 	*urctx = *reqCtx;
-	std::cout << "lua_openrequire_wrapper: rooted args" << std::endl;
+	HXLUAU_TRACE("lua_openrequire_wrapper: rooted args");
 
 	// Store the ctxRoot in the registry. Use memory address as key
 	// to avoid collisions.

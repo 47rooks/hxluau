@@ -7,8 +7,9 @@
 # -D HXCPP_M64
 #-D HXCPP_CPP17=1
 -D UTEST_PRINT_TESTS
--D DEBUG
+# -D DEBUG
 # -D NO_PRECOMPILED_HEADERS
 # -D HXCPP-DEBUGGER
 -debug
 -cmd cp -R tests/scripts export/cpp
+# -D HXLUAU_DEBUG

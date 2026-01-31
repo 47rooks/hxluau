@@ -142,19 +142,25 @@ class VFSNavigator {
 	function updateRealPaths():NavigationStatus {
 		var result = getRealPath(modulePath);
 		if (result.status != Success) {
+			#if HXLUAU_DEBUG
 			trace('failed to get modulePath ${result.realPath}');
+			#end
 			return result.status;
 		}
 
 		var absoluteResult = getRealPath(absoluteModulePath);
 		if (absoluteResult.status != Success) {
+			#if HXLUAU_DEBUG
 			trace('failed to get absoluteModulePath ${absoluteResult.realPath}');
+			#end
 			return absoluteResult.status;
 		}
 
 		realPath = isAbsolutePath(result.realPath) ? absolutePathPrefix + result.realPath : result.realPath;
 		absoluteRealPath = absolutePathPrefix + absoluteResult.realPath;
+		#if HXLUAU_DEBUG
 		trace('absoluteRealPath=${absoluteRealPath}');
+		#end
 		return Success;
 	}
 
@@ -162,7 +168,9 @@ class VFSNavigator {
 		var found = false;
 		var suffix = "";
 
+		#if HXLUAU_DEBUG
 		trace('modulePath=${modulePath}');
+		#end
 		var lastSlash = modulePath.lastIndexOf("/");
 		if (lastSlash == -1)
 			throw "Assertion failed";

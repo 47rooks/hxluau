@@ -32,10 +32,12 @@ class Requirer {
 	 * @return true if requiring is allowed, false otherwise
 	 */
 	public static function isRequireAllowed(L:State, ctx:RequireCtx, requirerChunkname:String):Bool {
+		#if HXLUAU_DEBUG
 		trace("isRequireAllowed got called");
 		trace('ctx=${ctx}');
 		trace('requirer chunkname=${requirerChunkname}');
 		trace('data->number_of_calls=${ctx.number_of_calls}');
+		#end
 		// FIXME define chunkname convention.
 		//       Will matter more in flixel/openfl/lime asset context.
 		// return chunkname == "=stdin" || (chunkname.length > 0 && chunkname.charAt(0) == '@');
@@ -50,8 +52,10 @@ class Requirer {
 	 * @return the result of the navigation
 	 */
 	public static function reset(L:State, ctx:RequireCtx, requirerChunkname:String):NavigateResult {
+		#if HXLUAU_DEBUG
 		trace('reset got called from chunk: ${requirerChunkname}');
 		trace('ctx=${ctx}');
+		#end
 
 		if (requirerChunkname == "=stdin") {
 			return convert(ctx.vfs.resetToStdIn());
@@ -60,11 +64,15 @@ class Requirer {
 		}
 		// This is just a test example where we assume that chunknames
 		// are the file names of the loaded Luau code.
+		#if HXLUAU_DEBUG
 		trace('reset calling resetToPath with ${requirerChunkname}');
 		trace('ctx=${ctx}');
 		trace('ctx.vfs=${ctx.vfs}');
+		#end
 		var rv = convert(ctx.vfs.resetToPath(requirerChunkname));
+		#if HXLUAU_DEBUG
 		trace('reset returning ${rv}');
+		#end
 		return rv;
 	}
 
@@ -82,9 +90,13 @@ class Requirer {
 	 * @return the result of the navigation
 	 */
 	public static function toParent(L:State, ctx:RequireCtx):NavigateResult {
+		#if HXLUAU_DEBUG
 		trace('toParent got called ctx=${ctx}');
+		#end
 		var rv = convert(ctx.vfs.toParent());
+		#if HXLUAU_DEBUG
 		trace('toParent returning ${rv}');
+		#end
 		return rv;
 	}
 
@@ -96,9 +108,13 @@ class Requirer {
 	 * @return the result of the navigation
 	 */
 	public static function toChild(L:State, ctx:RequireCtx, name:String):NavigateResult {
+		#if HXLUAU_DEBUG
 		trace('toChild called with name=${name}');
+		#end
 		var rv = convert(ctx.vfs.toChild(name));
+		#if HXLUAU_DEBUG
 		trace('toChild returning ${rv}');
+		#end
 		return rv;
 	}
 
@@ -140,7 +156,9 @@ class Requirer {
 	 * @return the cache key
 	 */
 	public static function getCacheKey(L:State, ctx:RequireCtx):String {
+		#if HXLUAU_DEBUG
 		trace('getCacheKey called');
+		#end
 		return ctx.vfs.getAbsoluteFilePath();
 	}
 
@@ -168,26 +186,36 @@ class Requirer {
 	 */
 	public static function load(L:State, ctx:RequireCtx, path:String, chunkname:String, loadname:String):Int {
 		// Read file loadname
+		#if HXLUAU_DEBUG
 		trace('load: ${path}, ${loadname}');
+		#end
 		var content = sys.io.File.getContent(loadname);
+		#if HXLUAU_DEBUG
 		trace('load got\n${content}');
+		#end
 		// Compile the code
 		var options = CompileOptions.create();
 		options.debugLevel = 2;
 
 		var code = LuaCode.compile(content, content.length, options);
+		#if HXLUAU_DEBUG
 		trace('code size=${code.size}');
+		#end
 
 		// Load the code
 		var status = Lua.load(L, chunkname, code, 0);
 		if (status != 0) {
+			#if HXLUAU_DEBUG
 			trace('Error loading chunk: ${Lua.tostring(L, -1)}');
+			#end
 		}
 
 		// Execute the module
 		var pcallStatus = Lua.pcall(L, 0, 1, 0);
 		if (pcallStatus != 0) {
+			#if HXLUAU_DEBUG
 			trace('Error calling chunk: ${Lua.tostring(L, -1)}');
+			#end
 		}
 
 		return LuaStatus.OK;
