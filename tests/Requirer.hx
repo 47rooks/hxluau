@@ -1,37 +1,21 @@
 package;
 
-import Lua.CSizeT;
 import Lua.LuaStatus;
-import Lua.NativeState;
 import Lua.State;
 import LuaCode.CompileOptions;
-// import Require.NavigateResult;
 import Require;
-import Types.CString;
 import VFSNavigator.NavigationStatus;
-import cpp.Pointer;
-import cpp.RawPointer;
-import haxe.io.BytesBuffer;
 import sys.FileSystem;
-import sys.io.File;
 
-// typedef BoolCheck = () -> Bool;
-// typedef Coverage = (lua_State:State, int:Int) -> Void;
-// class Requirer {
-// 	public var copts:CompileOptions;
-// 	public var coverageActive:BoolCheck;
-// 	public var codegenEnabled:BoolCheck;
-// 	public var coverageTrack:Coverage;
-// 	public var vfs:VFSNavigator;
-// 	public function new(copts:CompileOptions, coverageActive:BoolCheck, codegenEnabled:BoolCheck, coverageTrack:Coverage) {
-// 		this.copts = copts;
-// 		this.coverageActive = coverageActive;
-// 		this.codegenEnabled = codegenEnabled;
-// 		this.coverageTrack = coverageTrack;
-// 		this.vfs = new VFSNavigator();
-// 	}
-// }
+/**
+ * Implementation of the Requirer.
+ */
 class Requirer {
+	/**
+	 * Converts a NavigationStatus to a NavigateResult.
+	 * @param status the NavigationStatus to convert
+	 * @return the corresponding NavigateResult
+	 */
 	public static function convert(status:NavigationStatus):NavigateResult {
 		return switch (status) {
 			case Success: NavigateResult.SUCCESS;
@@ -40,21 +24,34 @@ class Requirer {
 		}
 	}
 
+	/**
+	 * Returns whether requiring from the given chunkname is allowed.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @param requirerChunkname the chunkname of the requirer
+	 * @return true if requiring is allowed, false otherwise
+	 */
 	public static function isRequireAllowed(L:State, ctx:RequireCtx, requirerChunkname:String):Bool {
-		// public static function isRequireAllowed(L:State, requirerChunkname:String):Bool {
-		// public static function isRequireAllowed(L:State):Bool {
 		trace("isRequireAllowed got called");
+		trace('ctx=${ctx}');
 		trace('requirer chunkname=${requirerChunkname}');
-		trace('data->number_of_calls=${ctx.data.number_of_calls}');
-		var chunkname:String = requirerChunkname;
+		trace('data->number_of_calls=${ctx.number_of_calls}');
 		// FIXME define chunkname convention.
 		//       Will matter more in flixel/openfl/lime asset context.
 		// return chunkname == "=stdin" || (chunkname.length > 0 && chunkname.charAt(0) == '@');
 		return true;
 	}
 
+	/**
+	 * Resets the VFSNavigator to the location specified by the requirerChunkname.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @param requirerChunkname the chunkname of the requirer
+	 * @return the result of the navigation
+	 */
 	public static function reset(L:State, ctx:RequireCtx, requirerChunkname:String):NavigateResult {
 		trace('reset got called from chunk: ${requirerChunkname}');
+		trace('ctx=${ctx}');
 
 		if (requirerChunkname == "=stdin") {
 			return convert(ctx.vfs.resetToStdIn());
@@ -63,6 +60,9 @@ class Requirer {
 		}
 		// This is just a test example where we assume that chunknames
 		// are the file names of the loaded Luau code.
+		trace('reset calling resetToPath with ${requirerChunkname}');
+		trace('ctx=${ctx}');
+		trace('ctx.vfs=${ctx.vfs}');
 		var rv = convert(ctx.vfs.resetToPath(requirerChunkname));
 		trace('reset returning ${rv}');
 		return rv;
@@ -74,13 +74,27 @@ class Requirer {
 	// 	// TODO: check if absolute
 	// 	return convert(req.vfs.resetToPath(pathStr));
 	// }
+
+	/**
+	 * Navigates to the parent directory in the VFSNavigator.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @return the result of the navigation
+	 */
 	public static function toParent(L:State, ctx:RequireCtx):NavigateResult {
-		trace('toParent got called');
+		trace('toParent got called ctx=${ctx}');
 		var rv = convert(ctx.vfs.toParent());
 		trace('toParent returning ${rv}');
 		return rv;
 	}
 
+	/**
+	 * Navigates to the child with the given name in the VFSNavigator.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @param name the name of the child to navigate to
+	 * @return the result of the navigation
+	 */
 	public static function toChild(L:State, ctx:RequireCtx, name:String):NavigateResult {
 		trace('toChild called with name=${name}');
 		var rv = convert(ctx.vfs.toChild(name));
@@ -88,19 +102,43 @@ class Requirer {
 		return rv;
 	}
 
+	/**
+	 * Returns whether a module is present in the current context.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @return true if a module is present, false otherwise
+	 */
 	public static function isModulePresent(L:State, ctx:RequireCtx):Bool {
 		var path = ctx.vfs.getFilePath();
 		return FileSystem.exists(path) && !FileSystem.isDirectory(path);
 	}
 
+	/**
+	 * Returns the chunkname for the current module in the VFSNavigator.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @return the chunkname
+	 */
 	public static function getChunkname(L:State, ctx:RequireCtx):String {
 		return "@" + ctx.vfs.getFilePath();
 	}
 
+	/**
+	 * Returns the loadname for the current module in the VFSNavigator.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @return the loadname
+	 */
 	public static function getLoadname(L:State, ctx:RequireCtx):String {
 		return ctx.vfs.getAbsoluteFilePath();
 	}
 
+	/**
+	 * Returns the cache key for the current module in the VFSNavigator.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @return the cache key
+	 */
 	public static function getCacheKey(L:State, ctx:RequireCtx):String {
 		trace('getCacheKey called');
 		return ctx.vfs.getAbsoluteFilePath();
@@ -118,6 +156,16 @@ class Requirer {
 	// 	var content = FileSystem.exists(path) ? File.getContent(path) : null;
 	// 	return write(content, buffer, bufferSize, sizeOut);
 	// }
+
+	/**
+	 * Loads and executes the module at the given loadname.
+	 * @param L a pointer to the lua_State object
+	 * @param ctx a pointer to the RequireCtx struct
+	 * @param path the module path
+	 * @param chunkname the chunkname for the module
+	 * @param loadname the loadname for the module
+	 * @return LUA_OK on success, or an error code on failure
+	 */
 	public static function load(L:State, ctx:RequireCtx, path:String, chunkname:String, loadname:String):Int {
 		// Read file loadname
 		trace('load: ${path}, ${loadname}');
@@ -144,94 +192,4 @@ class Requirer {
 
 		return LuaStatus.OK;
 	}
-	/*
-		Design 1:
-			The RequiteCtx has two parts. One is the state information that the
-			Requirer needs for normal operation. The second is the various functions
-			that the Luau Require modules needs in the config_init. These functions
-			though are Haxe functions and cannot be passed directly to cpp. Instead
-			The requireConfigInit will populate the Configuration object with
-			jump or trampoline functions. These will be pure C functions so they
-			will not have upvalues or context objects. Their job is to extract the
-			correct Haxe function from the RequireCtx and call it with the parameters required.
-
-			In order to do this the requireConfigInit function will become an
-			extern and will mostly be written as cppNamespaceCode to create all
-			the trampoline functions - one for each Configuration function.
-			
-			The RequireCtx object will be passed to the luaopen_require function.
-			It will pass via wrapper which will root it and store the pointer in
-			the REGISTRY as a userdata to ensure proper cleanup. Its destructor will
-			remove the root.
-
-		Design 2:
-			Design has a more complex RequireCtx creation where each of the
-			required Configuration callbacks fields is a property. The setter then
-			create a callback function as a closure over the function object as
-			is done in pushcfunction(). It then stores these in a named table
-			in the Luau lua_State object.
-
-			The configInit function is again an extern which creates jump functions
-			which retrieve the context table from the State and then extract the
-			correct field, marshal the parameters and make the call.
-
-			This approach is more complex to implement and incurs an additional
-			function call for each of the configured functions.
-	 */
 }
-// @:cppNamespaceCode('
-// #include <iostream>
-// #include <lua.h>
-// #include <Require.h>
-// int callback(lua_State *L)
-// {
-// 	// std::cout << "callback:entered" << std::endl;
-//     auto root = *(static_cast<hx::Object ***>(lua_touserdatatagged(L,
-// 								  	 			lua_upvalueindex(1), 1)));
-//     // std::cout << "callback:root:" << root << std::endl;
-//     // std::cout << "callback:*root:" << *root << std::endl;
-//     auto cb = Dynamic(*root);
-//     // std::cout << "about call cb()" << std::endl;
-// 	// std::cout << "callback:L:" << L << std::endl;
-// 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
-//     int rv = cb(statePtr);
-//     return rv;
-// }
-// void gcroot_finalizer (lua_State *L, void *ud) {
-// 	// std::cout << "gcroot_finalizer:entered" << std::endl;
-// 	auto root = *(static_cast<hx::Object ***>(ud));
-//     GCRemoveRoot(root);
-//     // std::cout << "gcroot_finalizer:about to call delete root" << std::endl;
-// 	// std::cout << "gcroot_finalizer:root:" << root << std::endl;
-//     delete root;
-// }
-// void require_config_init(luarequire_Configuration* config)
-// {
-//     std::cout << "init got called" << std::endl;
-// 	// lua_setuserdatadtor(L, 1, gcroot_finalizer);
-//     // hx::Object **root = new hx::Object *{cb.mPtr};
-//     // GCAddRoot(root);
-//     // // std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
-//     // // std::cout << "wrapper:root:" << root << std::endl;
-//     // // std::cout << "wrapper:*root:" << *root << std::endl;
-//     // hx::Object ** *ud = static_cast<hx::Object ***>(lua_newuserdatatagged(L, sizeof(hx::Object **), 1));
-// 	// *ud = root;
-//     // lua_pushcclosure(L, callback, debugName, 1);
-// }
-// ')
-// @:headerCode('
-// #include <Require.h>
-// /// @brief This is a C++ wrapper around the C function lua_pushcclosure().
-// /// It accepts a Haxe Dynamic function object to pass to lua_pushcclosure().
-// /// @param fn The Haxe Dynamic function object to be called back from
-// ///           lua_pushcclosure(). The function signature is not constrained
-// ///	          here but must match the form expected by lua_pushcclosure().
-// void require_config_init(luarequire_Configuration* config);
-// ')
-// @:keep
-// class RequireConfiguratorHidden {}
-// @:include("RequireConfiguratorHidden.h")
-// extern class RequireConfigurator {
-// 	@:native("RequireConfiguratorHidden::require_config_init")
-// 	static function requireConfigInit(config:cpp.RawPointer<Configuration>):Void;
-// }

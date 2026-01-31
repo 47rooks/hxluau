@@ -2,16 +2,29 @@ package;
 
 import haxe.io.Path;
 import sys.FileSystem;
-import sys.io.File;
 
 using StringTools;
 
+/**
+ * Virtual File System Navigator.
+ * This class simulates navigation through a virtual file system for module
+ * resolution.
+ */
+/**
+ * Navigation status enumeration.
+ */
 enum NavigationStatus {
 	Success;
 	Ambiguous;
 	NotFound;
 }
 
+/**
+ * Virtual File System Navigator.
+ * This class is modelled on the Luau CLI VFSNavigator from its Requirer.
+ * At present it's basically a port to Haxe. Thus a good deal of it is
+ * not really required, and likely isn't even used in the current tests.
+ */
 class VFSNavigator {
 	var realPath:String;
 	var absoluteRealPath:String;

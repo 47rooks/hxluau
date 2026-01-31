@@ -4,7 +4,6 @@ import Lua.LuaType;
 import Lua.State;
 import Lua;
 import LuaCode.CompileOptions;
-import Require.Configuration;
 import Requirer;
 import sys.io.File;
 import utest.Assert;
@@ -184,9 +183,21 @@ class TestLoadAndCall extends Test {
 		// Requirer.requireConfigInit(config);
 		// trace('requirer config load={${config.is_require_allowed}}');
 		// Require.openrequire(L, cpp.Callable.fromStaticFunction(requireConfigInit).call, new RequireCtx());
-		var rctx = new RequireCtx();
-		Require.openrequire(L, rctx); // var source = "require('./Animal')";
-		trace('rctx num=${rctx.data.number_of_calls}');
+		var rCtxData = new RequireCtx();
+		// Require.openrequire(L, cpp.Callable.fromStaticFunction(Requirer.requireConfigInit).call, rctx);
+		var cbks = new RequireCallbacks();
+		cbks.isRequireAllowed = Requirer.isRequireAllowed;
+		cbks.reset = Requirer.reset;
+		cbks.to_parent = Requirer.toParent;
+		cbks.to_child = Requirer.toChild;
+		cbks.is_module_present = Requirer.isModulePresent;
+		cbks.get_chunkname = Requirer.getChunkname;
+		cbks.get_loadname = Requirer.getLoadname;
+		cbks.get_cache_key = Requirer.getCacheKey;
+		cbks.load = Requirer.load;
+		Require.openrequire(L, cbks, rCtxData);
+		// var source = "require('./Animal')";
+		trace('rctx num=${rCtxData.number_of_calls}');
 		// var source = "return { v= 6}";  // dummy code that works
 		// Load the Main.luau code
 		var filePath = 'tests/scripts/Main.luau';

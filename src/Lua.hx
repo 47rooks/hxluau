@@ -34,6 +34,7 @@ void gcroot_finalizer (lua_State *L, void *ud) {
 void pushcfunction_wrapper(lua_State *L, Dynamic cb, const char *debugName)
 {
 	lua_setuserdatadtor(L, 1, gcroot_finalizer);
+	// FIXME This needs to handle memory alloc failures
     hx::Object **root = new hx::Object *{cb.mPtr};
     GCAddRoot(root);
     // std::cout << "wrapper:cb.mPtr:" << cb.mPtr << std::endl;
