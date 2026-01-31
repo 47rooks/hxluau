@@ -18,6 +18,7 @@ cd cmake
 cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build . --target Luau.VM --config RelWithDebInfo
 cmake --build . --target Luau.Compiler --config RelWithDebInfo
+cmake --build . --target Luau.Require --config RelWithDebInfo
 ```
 
 ## Creating a local haxelib and installing the dependent libraries

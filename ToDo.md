@@ -1,6 +1,6 @@
 # Stuff to do
 
-   * finish API build out to include corroutines, debugger support
+   * finish API build out to include coroutines, debugger support
    * fix miscellaneous failures in a tests
    * build out macro support so any functions and types may be used in macros
    * add HL extern support

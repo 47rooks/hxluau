@@ -25,7 +25,7 @@ class TestCoroutines extends Test {
 
 	public function testNewThreadAndResume() {
 		var source = "coroutine.yield(42); return 99";
-		var options:CompileOptions = {};
+		var options:CompileOptions = CompileOptions.create();
 		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);
@@ -46,7 +46,7 @@ class TestCoroutines extends Test {
 
 	public function testYieldAndStatus() {
 		var source = "coroutine.yield(123)";
-		var options:CompileOptions = {};
+		var options:CompileOptions = CompileOptions.create();
 		var code = LuaCode.compile(source, source.length, options);
 		var status = Lua.load(L, "chunk", code, 0);
 		Assert.equals(0, status);

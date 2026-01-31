@@ -11,3 +11,4 @@
 # -D NO_PRECOMPILED_HEADERS
 # -D HXCPP-DEBUGGER
 -debug
+-cmd cp -R tests/scripts export/cpp
