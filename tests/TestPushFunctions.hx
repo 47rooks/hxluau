@@ -1,6 +1,7 @@
 package;
 
 import Lua;
+import LuaCode.CompileOptions;
 import utest.Assert;
 import utest.Test;
 
@@ -18,6 +19,30 @@ class TestPushFunctions extends Test {
 		Lua.pushnumber(L, 3.14);
 		Assert.equals(LuaType.NUMBER, Lua.type(L, -1), "pushnumber should push a number");
 		Assert.equals(3.14, Lua.tonumber(L, -1));
+		Lua.settop(L, 0);
+		Lua.close(L);
+	}
+
+	function testPushNumberToFunction() {
+		var L = Lua.newstate();
+		Lualib.openlibs(L);
+		var source = "function add2(x) print('jhe' .. x); return x + 2; end";
+		var options:CompileOptions = CompileOptions.create();
+		var code = LuaCode.compile(source, source.length, options);
+		var status = Lua.load(L, "chunk", code, 0);
+		trace('status after load is ' + status);
+		Assert.equals(0, status);
+		Lua.call(L, 0, 0); // call the chunk to define the function
+
+		var rc = Lua.getglobal(L, "add2"); // push the function onto the stack
+		trace('after getglobal, top of stack is ' + Lua.gettop(L) + ', rc=' + rc);
+
+		Lua.pushnumber(L, 3.14);
+
+		Lua.call(L, 1, 1);
+		trace('after pcall, type of top of stack is ' + Lua.type(L, -1));
+		Assert.equals(5.14, Lua.tonumber(L, -1));
+
 		Lua.settop(L, 0);
 		Lua.close(L);
 	}

@@ -150,12 +150,10 @@ bool is_require_allowed(lua_State* L, void* ctx, const char* requirer_chunkname)
 
 	auto ctxRoot = *ctxp->ctx;
 	auto cb = (static_cast<RequireCallbacks_obj *>(*ctxp->callbacks))->isRequireAllowed;
-	HXLUAU_TRACE("is_require_allowed:cb:" << (void *)cb);
 
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
 	::String chunkname = ::String(requirer_chunkname);
 	HXLUAU_TRACE("is_require_allowed:chunkname:" << chunkname);
-	HXLUAU_TRACE("is_require_allowed:cb:" << (void *)cb);
     bool rv = cb(statePtr, ctxRoot, chunkname);
     HXLUAU_TRACE("is_require_allowed cb return " << rv);
 	return rv;
@@ -176,9 +174,6 @@ luarequire_NavigateResult reset(lua_State* L, void* ctx, const char* requirer_ch
 	HXLUAU_TRACE("reset: ctxRoot=" << (void *)ctxRoot);
 
     auto cb = (static_cast<RequireCallbacks_obj *>(*ctxp->callbacks))->reset;
-
-	// std::cout << "reset:ctxRoot:" << ctxRoot << std::endl;
-	// std::cout << "reset:*ctxRoot:" << *ctxRoot << std::endl;
 
 	::cpp::Pointer<lua_State> statePtr = ::cpp::Pointer<lua_State>(L);
 	::String chunkname = ::String(requirer_chunkname);
@@ -477,7 +472,6 @@ void lua_openrequire_wrapper(lua_State *L, Dynamic callbacks, Dynamic ctx)
 	// FIXME This needs to handle memory alloc failures
 	HXLUAU_TRACE("lua_openrequire_wrapper: about to root args");
 	luarequire_ctx *reqCtx = new luarequire_ctx();
-	HXLUAU_TRACE("lua_openrequire_wrapper: probably bad assignment");
 	reqCtx->ctx = new hx::Object *{ctx.mPtr};
 	HXLUAU_TRACE("lua_openrequire_wrapper: ctx.mPtr=" << (void *)ctx.mPtr);
 
